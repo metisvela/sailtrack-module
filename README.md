@@ -1,2 +1,2 @@
 # SailTrack Sensor
-Base  code for sailtrack ESP32-based sensors.
+Base  code for SailTrack's ESP32-based sensors.
