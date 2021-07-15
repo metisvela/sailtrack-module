@@ -1,5 +1,7 @@
 #include "SailtrackModule.h"
 
+PubSubClient * mqtt = NULL;
+
 void SailtrackModule::init(const char * name) {
     Serial.begin(115200);
 
@@ -32,4 +34,8 @@ void SailtrackModule::initMqtt(const char * name) {
     mqtt->connect(name, MQTT_USERNAME, MQTT_PASSWORD);
     mqtt->publish("test", "hi bro");
     Serial.println("MQTT Connected!");
+}
+
+void SailtrackModule::loop() {
+    mqtt->loop();
 }

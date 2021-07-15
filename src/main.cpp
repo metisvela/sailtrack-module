@@ -2,10 +2,15 @@
 
 #include "SailtrackModule.h"
 
+void publishTest() {
+    SailtrackModule::mqtt->publish("Test", "ciao bro");
+}
+
 void setup() {
-  SailtrackModule module = SailtrackModule("test-module");
+	SailtrackModule::init("test-module");
+    xTask
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+	SailtrackModule::loop();
 }

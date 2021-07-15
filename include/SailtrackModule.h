@@ -14,7 +14,6 @@ class SailtrackModule {
         static void initMqtt(const char * name);
     public:
         static void init(const char * name);
-        static void publish();
         static void loop();
 };
 
