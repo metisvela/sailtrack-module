@@ -3,14 +3,19 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <PubSubClient.h>
 
 #include "config.h"
 
 class SailtrackModule {
     private:
-        void initWifi(const char * hostname);
+        static PubSubClient * mqtt;
+        static void initWifi(const char * hostname);
+        static void initMqtt(const char * name);
     public:
-        SailtrackModule(const char * name);
+        static void init(const char * name);
+        static void publish();
+        static void loop();
 };
 
 #endif
