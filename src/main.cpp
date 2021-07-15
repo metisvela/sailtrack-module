@@ -9,6 +9,7 @@ void publishTest() {
 void setup() {
 	SailtrackModule::init("test-module");
     xTask
+  SailtrackModule::init("test-module");
 }
 
 void loop() {

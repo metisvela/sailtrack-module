@@ -1,6 +1,6 @@
 #include "SailtrackModule.h"
 
-PubSubClient * mqtt = NULL;
+PubSubClient * SailtrackModule::mqtt = NULL;
 
 void SailtrackModule::init(const char * name) {
     Serial.begin(115200);
@@ -30,9 +30,9 @@ void SailtrackModule::initWifi(const char * hostname) {
 
 void SailtrackModule::initMqtt(const char * name) {
     WiFiClient wifiClient;
-    mqtt = new PubSubClient(MQTT_SERVER_IP, MQTT_PORT, wifiClient);
-    mqtt->connect(name, MQTT_USERNAME, MQTT_PASSWORD);
-    mqtt->publish("test", "hi bro");
+    SailtrackModule::mqtt = new PubSubClient(MQTT_SERVER_IP, MQTT_PORT, wifiClient);
+    SailtrackModule::mqtt->connect(name, MQTT_USERNAME, MQTT_PASSWORD);
+    SailtrackModule::mqtt->publish("test", "hi bro");
     Serial.println("MQTT Connected!");
 }
 
