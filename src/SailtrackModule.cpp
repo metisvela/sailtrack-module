@@ -1,7 +1,7 @@
 #include "SailtrackModule.h"
 
-WiFiClient SailtrackModule::wifiClient;
-PubSubClient SailtrackModule::mqtt;
+esp_mqtt_client_handle_t SailtrackModule::mqtt;
+esp_mqtt_client_config_t SailtrackModule::mqttConfig;
 
 void SailtrackModule::init(const char * name) {
     Serial.begin(115200);
@@ -26,7 +26,7 @@ void SailtrackModule::initWifi(const char * hostname) {
     
     if (WiFi.status() != WL_CONNECTED) {
         Serial.printf("Impossible to connect to '%s'\n", WIFI_SSID);
-        Serial.println("Going to deep slep, goodnight...");
+        Serial.println("Going to deep sleep, goodnight...");
         esp_deep_sleep_start();
     }
 
@@ -40,10 +40,14 @@ void SailtrackModule::initWifi(const char * hostname) {
 }
 
 void SailtrackModule::initMqtt(const char * name) {
-    mqtt = PubSubClient(MQTT_SERVER_IP, MQTT_PORT, wifiClient);
+    mqttConfig.host = MQTT_SERVER_IP;
+    mqttConfig.port = MQTT_PORT;
+    mqttConfig.username = MQTT_USERNAME;
+    mqttConfig.password = MQTT_PASSWORD;
+    mqtt = esp_mqtt_client_init(&mqttConfig);
 
     Serial.print("Connecting to MQTT server...");
-    for (int i = 0; !mqtt.connect(name, MQTT_USERNAME, MQTT_PASSWORD) && i < 5; i++) {
+    for (int i = 0; esp_mqtt_client_start(mqtt) && i < 5; i++) {
         Serial.print(".");
         delay(500);
     }
@@ -52,10 +56,6 @@ void SailtrackModule::initMqtt(const char * name) {
     Serial.println("Successfully connected to MQTT server!");
 }
 
-void SailtrackModule::loop() {
-    mqtt.loop();
-}
-
-void SailtrackModule::publish(const char * topic, const char * payload) {
-    mqtt.publish(topic, payload);
+int SailtrackModule::publish(const char * topic, const char * payload) {
+    return esp_mqtt_client_publish(mqtt, topic, payload, 0, 1, 0);
 }
