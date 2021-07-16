@@ -9,11 +9,13 @@
 
 class SailtrackModule {
     private:
-        static PubSubClient * mqtt;
+        static WiFiClient wifiClient;
+        static PubSubClient mqtt;
         static void initWifi(const char * hostname);
         static void initMqtt(const char * name);
     public:
         static void init(const char * name);
+        static void publish(const char * topic, const char * payload);
         static void loop();
 };
 
