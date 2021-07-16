@@ -1,5 +1,5 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef SAILTRACK_CONFIG_H
+#define SAILTRACK_CONFIG_H
 
 #define WIFI_SSID "SailTrack-Net"
 #define WIFI_PSW "sailtracknet"

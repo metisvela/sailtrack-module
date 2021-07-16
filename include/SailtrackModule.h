@@ -5,7 +5,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-#include "config.h"
+#include "SailtrackConfig.h"
 
 class SailtrackModule {
     private:

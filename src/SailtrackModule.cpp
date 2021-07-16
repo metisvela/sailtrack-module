@@ -4,7 +4,7 @@ PubSubClient * SailtrackModule::mqtt = NULL;
 
 void SailtrackModule::init(const char * name) {
     Serial.begin(115200);
-
+    Serial.println();
     initWifi(name);
     initMqtt(name);
 }
@@ -17,22 +17,24 @@ void SailtrackModule::initWifi(const char * hostname) {
     esp_sleep_enable_timer_wakeup(WIFI_SLEEP_DURATION);
 
     if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-        Serial.println("Impossible to connect to WiFi network, going to deep sleep, goodnight!");
+        Serial.printf("Impossible to connect to '%s'\n", WIFI_SSID);
+        Serial.println("Going to deep slep, goodnight...");
         esp_deep_sleep_start();
     }
-    Serial.println("WiFi Connected!");
+    Serial.printf("Successfully connected to '%s'!\n", WIFI_SSID);
+    Serial.printf("IP Address: %s\n", WiFi.localIP());
     
     WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
-        Serial.println("Lost connection to WiFi, going to deep sleep, goodnight!");
+        Serial.printf("Lost connection to '%s'\n", WIFI_SSID);
+        Serial.println("Going to deep sleep, goodnight...");
         esp_deep_sleep_start();
     }, SYSTEM_EVENT_STA_DISCONNECTED);
 }
 
 void SailtrackModule::initMqtt(const char * name) {
     WiFiClient wifiClient;
-    SailtrackModule::mqtt = new PubSubClient(MQTT_SERVER_IP, MQTT_PORT, wifiClient);
-    SailtrackModule::mqtt->connect(name, MQTT_USERNAME, MQTT_PASSWORD);
-    SailtrackModule::mqtt->publish("test", "hi bro");
+    mqtt = new PubSubClient(MQTT_SERVER_IP, MQTT_PORT, wifiClient);
+    mqtt->connect(name, MQTT_USERNAME, MQTT_PASSWORD);
     Serial.println("MQTT Connected!");
 }
 
