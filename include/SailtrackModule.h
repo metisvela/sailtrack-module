@@ -13,8 +13,9 @@ class SailtrackModule {
     private:
         static esp_mqtt_client_config_t mqttConfig;
         static esp_mqtt_client_handle_t mqttClient;
-        static void initWifi(const char * hostname, IPAddress ip);
-        static void initMqtt(const char * name);
+        static const char * name;
+        static void initWifi(IPAddress ip);
+        static void initMqtt();
         static void initOTA();
     public:
         static void init(const char * name, IPAddress ip);

@@ -2,23 +2,25 @@
 
 esp_mqtt_client_handle_t SailtrackModule::mqttClient;
 esp_mqtt_client_config_t SailtrackModule::mqttConfig;
+const char * SailtrackModule::name;
 SailtrackModule STModule;
 
 void SailtrackModule::init(const char * name, IPAddress ip) {
     Serial.begin(115200);
     Serial.println();
-    initWifi(name, ip);
+    SailtrackModule::name = name;
+    initWifi(ip);
     initOTA();
-    initMqtt(name);
+    initMqtt();
 }
 
 void SailtrackModule::loop() {
     ArduinoOTA.handle();
 }
 
-void SailtrackModule::initWifi(const char * hostname, IPAddress ip) {
+void SailtrackModule::initWifi(IPAddress ip) {
     WiFi.mode(WIFI_STA);
-    WiFi.setHostname(hostname);
+    WiFi.setHostname(name);
     WiFi.config(ip, WIFI_GATEWAY, WIFI_SUBNET);
     WiFi.begin(WIFI_SSID, WIFI_PSW);
 
@@ -46,7 +48,7 @@ void SailtrackModule::initWifi(const char * hostname, IPAddress ip) {
     }, SYSTEM_EVENT_STA_DISCONNECTED);
 }
 
-void SailtrackModule::initMqtt(const char * name) {
+void SailtrackModule::initMqtt() {
     mqttConfig.host = MQTT_SERVER_IP;
     mqttConfig.port = MQTT_PORT;
     mqttConfig.username = MQTT_USERNAME;
@@ -85,6 +87,7 @@ void SailtrackModule::initOTA() {
             else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
             else if (error == OTA_END_ERROR) Serial.println("End Failed");
         });
+    ArduinoOTA.setHostname(name);
     ArduinoOTA.begin();
     Serial.println("OTA successfully initialized!");
     Serial.println("IP Address: " + WiFi.localIP().toString());
