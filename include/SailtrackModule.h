@@ -13,10 +13,12 @@ class SailtrackModule {
     private:
         static esp_mqtt_client_config_t mqttConfig;
         static esp_mqtt_client_handle_t mqttClient;
-        static void initWifi(const char * hostname);
+        static void initWifi(const char * hostname, IPAddress ip);
         static void initMqtt(const char * name);
+        static void initOTA();
     public:
-        static void init(const char * name);
+        static void init(const char * name, IPAddress ip);
+        static void loop();
         static int publish(const char * topic, const char * mesaurement, DynamicJsonDocument & payload);
         static int subscribe(const char * topic);
         static esp_err_t registerEvent(esp_mqtt_event_id_t event, esp_event_handler_t eventHandler, void * eventHandlerArg);

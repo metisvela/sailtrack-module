@@ -4,16 +4,22 @@ esp_mqtt_client_handle_t SailtrackModule::mqttClient;
 esp_mqtt_client_config_t SailtrackModule::mqttConfig;
 SailtrackModule STModule;
 
-void SailtrackModule::init(const char * name) {
+void SailtrackModule::init(const char * name, IPAddress ip) {
     Serial.begin(115200);
     Serial.println();
-    initWifi(name);
+    initWifi(name, ip);
+    initOTA();
     initMqtt(name);
 }
 
-void SailtrackModule::initWifi(const char * hostname) {
+void SailtrackModule::loop() {
+    ArduinoOTA.handle();
+}
+
+void SailtrackModule::initWifi(const char * hostname, IPAddress ip) {
     WiFi.mode(WIFI_STA);
     WiFi.setHostname(hostname);
+    WiFi.config(ip, WIFI_GATEWAY, WIFI_SUBNET);
     WiFi.begin(WIFI_SSID, WIFI_PSW);
 
     esp_sleep_enable_timer_wakeup(WIFI_SLEEP_DURATION);
@@ -55,6 +61,33 @@ void SailtrackModule::initMqtt(const char * name) {
     Serial.println();
 
     Serial.println("Successfully connected to MQTT server!");
+}
+
+void SailtrackModule::initOTA() {
+    ArduinoOTA
+        .onStart([]() {
+            String type;
+            if (ArduinoOTA.getCommand() == U_FLASH) type = "sketch";
+            else type = "filesystem";
+            Serial.println("Start updating " + type);
+        })
+        .onEnd([]() {
+            Serial.println("\nEnd");
+        })
+        .onProgress([](unsigned int progress, unsigned int total) {
+            Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+        })
+        .onError([](ota_error_t error) {
+            Serial.printf("Error[%u]: ", error);
+            if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+            else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+            else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+            else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+            else if (error == OTA_END_ERROR) Serial.println("End Failed");
+        });
+    ArduinoOTA.begin();
+    Serial.println("OTA successfully initialized!");
+    Serial.println("IP Address: " + WiFi.localIP().toString());
 }
 
 int SailtrackModule::publish(const char * topic, const char * measurement, DynamicJsonDocument & payload) {

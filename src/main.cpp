@@ -21,12 +21,12 @@ static void onMessage(void * handlerArgs, esp_event_base_t base, int32_t eventId
 }
 
 void setup() {
-	STModule.init("test");
+	STModule.init("test", IPAddress(192, 168, 42, 51));
 	STModule.registerEvent(MQTT_EVENT_DATA, onMessage, NULL);
 	STModule.subscribe("sensor/test1");
 	xTaskCreate(publishTask, "publish_task", 10000, NULL, 1, NULL);
 }
 
 void loop() {
-	
+	STModule.loop();
 }
