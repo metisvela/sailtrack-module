@@ -6,7 +6,7 @@ const char * SailtrackModule::name;
 char SailtrackModule::hostname[50];
 
 #ifdef ARDUINO_T_Beam
-AXP20X_Class PMU;
+    AXP20X_Class PMU;
 #endif
 
 void SailtrackModule::init(const char * name, IPAddress ip) {
@@ -98,8 +98,8 @@ void SailtrackModule::initOTA() {
 
 void SailtrackModule::initPower() {
     #ifdef ARDUINO_T_Beam
-    Wire.begin(21, 22);
-    PMU.begin(Wire, AXP192_SLAVE_ADDRESS);
+        Wire.begin(21, 22);
+        PMU.begin(Wire, AXP192_SLAVE_ADDRESS);
     #endif
 
     xTaskCreate(statusTask, "status_task", TASK_MEDIUM_STACK_SIZE, NULL, TASK_MEDIUM_PRIORITY, NULL);
@@ -115,10 +115,10 @@ void SailtrackModule::statusTask(void * pvArguments) {
         JsonObject cpu = payload.createNestedObject("cpu");
 
         #ifdef ARDUINO_T_Beam
-        battery["voltage"] = PMU.getBattVoltage()/1000;
-        battery["charging"] = PMU.isChargeing();
+            battery["voltage"] = PMU.getBattVoltage() / 1000;
+            battery["charging"] = PMU.isChargeing();
         #else
-        battery["voltage"] = analogRead(STATUS_BATTERY_PIN);
+            battery["voltage"] = analogRead(BATTERY_PIN) * BATTERY_ADC_MULTIPLIER / 1000;
         #endif
         cpu["temperature"] = temperatureRead();
 
