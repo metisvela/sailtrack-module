@@ -1,8 +1,17 @@
 #ifndef SAILTRACK_CONFIG_H
 #define SAILTRACK_CONFIG_H
 
+#define TASK_HIGH_PRIORITY 6
+#define TASK_MEDIUM_PRIORITY 4
+#define TASK_LOW_PRIORITY 2
+
+#define TASK_BIG_STACK_SIZE 4096
+#define TASK_MEDIUM_STACK_SIZE 2048
+#define TASK_SMALL_STACK_SIZE 1024
+
 #define WIFI_SSID "SailTrack-Net"
-#define WIFI_PSW "sailtracknet"
+#define WIFI_PASSWORD "sailtracknet"
+#define WIFI_CONNECTION_ATTEMPTS 5
 #define WIFI_SLEEP_DURATION 60 * 1e6
 #define WIFI_GATEWAY IPAddress(192, 168, 42, 1)
 #define WIFI_SUBNET IPAddress(255, 255, 255, 0)
@@ -11,5 +20,13 @@
 #define MQTT_PORT 1883
 #define MQTT_USERNAME "mosquitto"
 #define MQTT_PASSWORD "dietpi"
+
+#define STATUS_PUBLISH_RATE 0.1
+#define STATUS_PUBLISH_PERIOD_MS 1000/STATUS_PUBLISH_RATE
+#ifdef ARDUINO_TTGO_T7_V14_Mini32
+#define STATUS_BATTERY_PIN 35
+#elif ARDUINO_ESP32_DEV
+#define STATUS_BATTERY_PIN 36
+#endif
 
 #endif

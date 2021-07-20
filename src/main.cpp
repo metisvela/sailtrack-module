@@ -7,9 +7,9 @@ int counter = 0;
 
 void publishTask(void * pvArguments) {
 	while(true) {
-		DynamicJsonDocument doc(JSON_OBJECT_SIZE(1));
-		doc["test_counter"] = counter++;
-		STModule.publish("sensor/test0", "test0", doc);
+		DynamicJsonDocument data(100);
+		data["test_counter"] = counter++;
+		STModule.publish("sensor/test0", "test0", data);
 		delay(1000);
 	}
 }
@@ -21,7 +21,7 @@ static void onMessage(void * handlerArgs, esp_event_base_t base, int32_t eventId
 }
 
 void setup() {
-	STModule.init("test", IPAddress(192, 168, 42, 51));
+	STModule.init("module", IPAddress(192, 168, 42, 100));
 	STModule.registerEvent(MQTT_EVENT_DATA, onMessage, NULL);
 	STModule.subscribe("sensor/test1");
 	xTaskCreate(publishTask, "publish_task", 10000, NULL, 1, NULL);
