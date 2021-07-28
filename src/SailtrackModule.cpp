@@ -164,7 +164,7 @@ void SailtrackModule::statusTask(void * pvArguments) {
 
 int SailtrackModule::publish(const char * topic, const char * measurement, DynamicJsonDocument payload) {
     payload["measurement"] = measurement;
-    char output[500];
+    char output[MQTT_PAYLOAD_SIZE];
     serializeJson(payload, output);
     return esp_mqtt_client_publish(mqttClient, topic, output, 0, 1, 0);
 }
