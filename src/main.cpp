@@ -1,7 +1,27 @@
 #include <Arduino.h>
-#include <ArduinoJson.h>
 
 #include "SailtrackModule.h"
+
+class TestCallbacks: public SailtrackModuleCallbacks {
+	void onWifiConnectionBegin() {
+		// Notify user
+	}
+	
+	void onWifiConnectionResult(wl_status_t status) {
+		// Notify user
+	}
+
+	DynamicJsonDocument getStatus() {
+		// Read module status
+		DynamicJsonDocument doc(500);
+		return doc;
+	}
+
+	void onMqttMessage(const char * topic, const char * message) {
+		Serial.println("NEW MESSAGE");
+		Serial.printf("Topic: %s, Message: %s\n", topic, message);
+	}
+};
 
 int counter = 0;
 
@@ -14,16 +34,10 @@ void publishTask(void * pvArguments) {
 	}
 }
 
-static void onMessage(void * handlerArgs, esp_event_base_t base, int32_t eventId, void * eventData) {
-	esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t) eventData;
-	Serial.printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-    Serial.printf("DATA=%.*s\r\n", event->data_len, event->data);
-}
-
 void setup() {
-	STModule.init("module", IPAddress(192, 168, 42, 100));
-	STModule.registerEvent(MQTT_EVENT_DATA, onMessage, NULL);
-	STModule.subscribe("sensor/test1");
+	STModule.begin("test", "sailtrack-test", IPAddress(192, 168, 42, 100));
+	STModule.setCallbacks(new TestCallbacks());
+	STModule.subscribe("sensor/test0");
 	xTaskCreate(publishTask, "publish_task", 10000, NULL, 1, NULL);
 }
 
