@@ -97,7 +97,7 @@ int SailtrackModule::publish(const char * topic, const char * measurement, Dynam
     int size = measureJson(message);
     char output[size];
     serializeJson(message, output, size);
-    return esp_mqtt_client_publish(mqttClient, topic, output, 0, 1, 0);
+    return esp_mqtt_client_publish(mqttClient, topic, output, size, 1, 0);
 }
 
 int SailtrackModule::subscribe(const char * topic) {
