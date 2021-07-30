@@ -3,10 +3,12 @@
 const char * SailtrackModule::name;
 const char * SailtrackModule::hostname;
 IPAddress SailtrackModule::ipAddress;
+
 SailtrackModuleCallbacks * SailtrackModule::callbacks;
+
 esp_mqtt_client_config_t SailtrackModule::mqttConfig;
 esp_mqtt_client_handle_t SailtrackModule::mqttClient;
-TaskHandle_t SailtrackModule::waitingTask;
+bool SailtrackModule::mqttConnected;
 
 void SailtrackModule::begin(const char * name, const char * hostname, IPAddress ipAddress) {
     SailtrackModule::name = name;
@@ -34,10 +36,10 @@ void SailtrackModule::beginWifi() {
     
     ESP_LOGI(TAG, "Connecting to '%s'...", WIFI_SSID);
 
-    WiFi.onEvent(wifiEventHandler, SYSTEM_EVENT_STA_CONNECTED);
+    for (int i = 0; WiFi.status() != WL_CONNECTED && i < WIFI_CONNECTION_TIMEOUT_MS / 500 ; i++)
+        delay(500);
 
-    waitingTask = xTaskGetCurrentTaskHandle();
-    if (!xTaskNotifyWait(0, 0, NULL, pdMS_TO_TICKS(WIFI_CONNECTION_TIMEOUT_MS))) {
+    if (WiFi.status() != WL_CONNECTED) {
         ESP_LOGE(TAG, "Impossible to connect to '%s'", WIFI_SSID);
         ESP_LOGE(TAG, "Going to deep sleep, goodnight...");
         ESP.deepSleep(WIFI_SLEEP_DURATION_US);
@@ -45,7 +47,14 @@ void SailtrackModule::beginWifi() {
 
     if (callbacks) callbacks->onWifiConnectionResult(WiFi.status());
 
-    WiFi.onEvent(wifiEventHandler, SYSTEM_EVENT_STA_DISCONNECTED);
+    ESP_LOGI(TAG, "Successfully connected to '%s'!", WIFI_SSID);
+
+    WiFi.onEvent([](WiFiEvent_t event) {
+        ESP_LOGE(TAG, "Lost connection to '%s'", WIFI_SSID);
+        if (callbacks) callbacks->onWifiDisconnected();
+        ESP_LOGE(TAG, "Restarting...");
+        ESP.restart();
+    }, SYSTEM_EVENT_STA_DISCONNECTED);
 }
 
 void SailtrackModule::beginOTA() {
@@ -81,65 +90,40 @@ void SailtrackModule::beginMqtt() {
     mqttConfig.password = MQTT_PASSWORD;
     mqttConfig.client_id = hostname;
     mqttClient = esp_mqtt_client_init(&mqttConfig);
+    mqttConnected = false;
+    esp_mqtt_client_start(mqttClient);
+    esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_CONNECTED, mqttEventHandler, NULL);
 
     ESP_LOGI(TAG, "Connecting to 'mqtt://%s@%s:%d'...", MQTT_USERNAME, MQTT_SERVER, MQTT_PORT);
 
-    esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_CONNECTED, mqttEventHandler, NULL);
+    for (int i = 0; !mqttConnected && i < MQTT_CONNECTION_TIMEOUT_MS / 500; i++)
+        delay(500);
 
-    esp_mqtt_client_start(mqttClient);
-    waitingTask = xTaskGetCurrentTaskHandle();
-    if (!xTaskNotifyWait(0, 0, NULL, pdMS_TO_TICKS(MQTT_CONNECTION_TIMEOUT_MS))) {
+    if (!mqttConnected) {
         ESP_LOGE(TAG, "Impossible to connect to 'mqtt://%s@%s:%d'", MQTT_USERNAME, MQTT_SERVER, MQTT_PORT);
         ESP_LOGE(TAG, "Restarting...");
         ESP.restart();
     }
 
-    esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_DISCONNECTED, mqttEventHandler, NULL);
-    esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_DATA, mqttEventHandler, NULL);
-}
+    ESP_LOGI(TAG, "Successfully connected to 'mqtt://%s@%s:%d'!", MQTT_USERNAME, MQTT_SERVER, MQTT_PORT);
 
-void SailtrackModule::wifiEventHandler(WiFiEvent_t event) {
-    switch(event) {
-        case SYSTEM_EVENT_STA_CONNECTED:
-            ESP_LOGI(TAG, "Successfully connected to '%s'!", WIFI_SSID);
-            xTaskNotify(waitingTask, 0, eNoAction);
-            break;
-        case SYSTEM_EVENT_STA_DISCONNECTED:
-            ESP_LOGE(TAG, "Lost connection to '%s'", WIFI_SSID);
-            ESP_LOGE(TAG, "Attempting reconnection...");
-            WiFi.reconnect();
-            waitingTask = xTaskGetCurrentTaskHandle();
-            if (!xTaskNotifyWait(0, 0, NULL, pdMS_TO_TICKS(WIFI_RECONNECTION_TIMEOUT_MS))) {
-                ESP_LOGE(TAG, "Impossible to reconnect to '%s'", WIFI_SSID);
-                ESP_LOGE(TAG, "Restarting...");
-                ESP.restart();
-            }
-            break;
-        default:
-            break;
-    }
+    esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_DATA, mqttEventHandler, NULL);
+    esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_DISCONNECTED, mqttEventHandler, NULL);
 }
 
 void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base, int32_t eventId, void * eventData) {
     esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t)eventData;
     switch((esp_mqtt_event_id_t)eventId) {
         case MQTT_EVENT_CONNECTED:
-            ESP_LOGI(TAG, "Successfully connected to 'mqtt://%s@%s:%d'!", MQTT_USERNAME, MQTT_SERVER, MQTT_PORT);
-            xTaskNotify(waitingTask, 0, eNoAction);
-            break;
-        case MQTT_EVENT_DISCONNECTED:
-            ESP_LOGE(TAG, "Lost connection to 'mqtt://%s@%s:%d'", MQTT_USERNAME, MQTT_SERVER, MQTT_PORT);
-            ESP_LOGE(TAG, "Attempting reconnection...");
-            esp_mqtt_client_reconnect(mqttClient);
-            waitingTask = xTaskGetCurrentTaskHandle();
-            if (!xTaskNotifyWait(0, 0, NULL, pdMS_TO_TICKS(MQTT_RECONNECTION_TIMEOUT_MS))) {
-                ESP_LOGE(TAG, "Impossible to reconnect to 'mqtt://%s@%s:%d'", MQTT_USERNAME, MQTT_SERVER, MQTT_PORT);
-                ESP_LOGE(TAG, "Restarting...");
-                ESP.restart();
-            }
+            if (callbacks) callbacks->onMqttConnected();
+            mqttConnected = true;
             break;
         case MQTT_EVENT_DATA:
             if (callbacks) callbacks->onMqttMessage(event->topic, event->data);
+            break;
+        case MQTT_EVENT_DISCONNECTED:
+            if (callbacks) callbacks->onMqttDisconnected();
+            mqttConnected = false;
             break;
         default:
             break;
@@ -164,7 +148,7 @@ void SailtrackModule::statusTask(void * pvArguments) {
 
 int SailtrackModule::publish(const char * topic, const char * measurement, DynamicJsonDocument payload) {
     payload["measurement"] = measurement;
-    char output[MQTT_PAYLOAD_SIZE];
+    char output[MQTT_OUTPUT_BUFFER_SIZE];
     serializeJson(payload, output);
     return esp_mqtt_client_publish(mqttClient, topic, output, 0, 1, 0);
 }

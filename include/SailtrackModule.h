@@ -16,12 +16,11 @@ class SailtrackModule {
     static SailtrackModuleCallbacks * callbacks;
     static esp_mqtt_client_config_t mqttConfig;
     static esp_mqtt_client_handle_t mqttClient;
-    static TaskHandle_t waitingTask;
+    static bool mqttConnected;
     static void beginLogging();
     static void beginWifi();
     static void beginOTA();
     static void beginMqtt();
-    static void wifiEventHandler(WiFiEvent_t event);
     static void mqttEventHandler(void * handlerArgs, esp_event_base_t base, int32_t eventId, void * eventData);
     static void statusTask(void * pvArguments);
     public:
