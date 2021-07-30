@@ -23,6 +23,7 @@ class SailtrackModule {
     static void beginMqtt();
     static void mqttEventHandler(void * handlerArgs, esp_event_base_t base, int32_t eventId, void * eventData);
     static void statusTask(void * pvArguments);
+    static int m_vprintf(const char * format, va_list args);
     public:
         static void begin(const char * name, const char * hostname, IPAddress ipAddress);
         static void setCallbacks(SailtrackModuleCallbacks * callbacks);

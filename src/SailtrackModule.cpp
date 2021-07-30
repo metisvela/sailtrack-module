@@ -23,6 +23,7 @@ void SailtrackModule::begin(const char * name, const char * hostname, IPAddress 
 void SailtrackModule::beginLogging() {
     Serial.begin(115200);
     Serial.println();
+    esp_log_set_vprintf(m_vprintf);
     esp_log_level_set(TAG, ESP_LOG_INFO);
 }
 
@@ -52,7 +53,7 @@ void SailtrackModule::beginWifi() {
     WiFi.onEvent([](WiFiEvent_t event) {
         ESP_LOGE(TAG, "Lost connection to '%s'", WIFI_SSID);
         if (callbacks) callbacks->onWifiDisconnected();
-        ESP_LOGE(TAG, "Restarting...");
+        ESP_LOGE(TAG, "Rebooting...");
         ESP.restart();
     }, SYSTEM_EVENT_STA_DISCONNECTED);
 }
@@ -60,24 +61,21 @@ void SailtrackModule::beginWifi() {
 void SailtrackModule::beginOTA() {
     ArduinoOTA
         .onStart([]() {
-            String type;
-            if (ArduinoOTA.getCommand() == U_FLASH) type = "sketch";
-            else type = "filesystem";
-            Serial.println("Start updating " + type);
+            if (ArduinoOTA.getCommand() == U_FLASH) ESP_LOGI(TAG, "Start updating sketch...");
+            else ESP_LOGI(TAG, "Start updating filesystem...");
         })
         .onEnd([]() {
-            Serial.println("\nEnd");
+            ESP_LOGI(TAG, "Update successfully completed!");
         })
         .onProgress([](unsigned int progress, unsigned int total) {
-            Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+            ESP_LOGV(TAG, "Progress: %u", (progress / (total / 100)));
         })
         .onError([](ota_error_t error) {
-            Serial.printf("Error[%u]: ", error);
-            if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-            else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-            else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-            else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-            else if (error == OTA_END_ERROR) Serial.println("End Failed");
+            if (error == OTA_AUTH_ERROR) ESP_LOGE(TAG, "Error[%u]: Auth Failed", error);
+            else if (error == OTA_BEGIN_ERROR) ESP_LOGE(TAG, "Error[%u]: Begin Failed", error);
+            else if (error == OTA_CONNECT_ERROR) ESP_LOGE(TAG, "Error[%u]: Connect Failed", error);
+            else if (error == OTA_RECEIVE_ERROR) ESP_LOGE(TAG, "Error[%u]: Receive Failed", error);
+            else if (error == OTA_END_ERROR) ESP_LOGE(TAG, "Error[%u]: End Failed", error);
         });
     ArduinoOTA.setHostname(hostname);
     ArduinoOTA.begin();
@@ -90,7 +88,6 @@ void SailtrackModule::beginMqtt() {
     mqttConfig.password = MQTT_PASSWORD;
     mqttConfig.client_id = hostname;
     mqttClient = esp_mqtt_client_init(&mqttConfig);
-    mqttConnected = false;
     esp_mqtt_client_start(mqttClient);
     esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_CONNECTED, mqttEventHandler, NULL);
 
@@ -101,7 +98,7 @@ void SailtrackModule::beginMqtt() {
 
     if (!mqttConnected) {
         ESP_LOGE(TAG, "Impossible to connect to 'mqtt://%s@%s:%d'", MQTT_USERNAME, MQTT_SERVER, MQTT_PORT);
-        ESP_LOGE(TAG, "Restarting...");
+        ESP_LOGE(TAG, "Rebooting...");
         ESP.restart();
     }
 
@@ -144,6 +141,23 @@ void SailtrackModule::statusTask(void * pvArguments) {
         publish(topic, name, payload);
         delay(STATUS_PUBLISH_PERIOD_MS);
     }
+}
+
+int SailtrackModule::m_vprintf(const char * format, va_list args) {
+    if (mqttConnected) {
+        char message[200];
+        char topic[50];
+        int messageSize;
+        sprintf(topic, "module/%s", name);
+        vsprintf(message, format, args);
+        for (messageSize = 0; message[messageSize]; messageSize++);
+        message[messageSize - 1] = 0;
+        DynamicJsonDocument payload(500);
+        JsonObject log = payload.createNestedObject("log");
+        log["message"] = message;
+        publish(topic, name, payload);
+    }
+    return vprintf(format, args);
 }
 
 int SailtrackModule::publish(const char * topic, const char * measurement, DynamicJsonDocument payload) {
