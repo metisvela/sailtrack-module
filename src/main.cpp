@@ -18,8 +18,8 @@ class TestCallbacks: public SailtrackModuleCallbacks {
 	}
 
 	void onMqttMessage(const char * topic, const char * message) {
-		Serial.println("NEW MESSAGE");
-		Serial.printf("Topic: %s, Message: %s\n", topic, message);
+		//Serial.println("NEW MESSAGE");
+		//Serial.printf("Topic: %s, Message: %s\n", topic, message);
 	}
 };
 
@@ -42,5 +42,4 @@ void setup() {
 }
 
 void loop() {
-	STModule.loop();
 }
