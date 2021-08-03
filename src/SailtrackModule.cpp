@@ -123,7 +123,11 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
             mqttConnected = true;
             break;
         case MQTT_EVENT_DATA:
-            if (callbacks) callbacks->onMqttMessage(event->topic, event->data);
+            char topic[20];
+            char message[500];
+            sprintf(topic, "%.*s", event->topic_len, event->topic);
+            sprintf(message, "%.*s", event->data_len, event->data);
+            if (callbacks) callbacks->onMqttMessage(topic, message);
             break;
         case MQTT_EVENT_DISCONNECTED:
             if (callbacks) callbacks->onMqttDisconnected();
