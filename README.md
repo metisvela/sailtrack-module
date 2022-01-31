@@ -1,2 +1,2 @@
 # SailTrack Module
-Base code for sailtrack ESP32-based modules.
+Base library required for all SailTrack's ESP32-based modules.
