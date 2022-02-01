@@ -23,7 +23,8 @@
     "examples": [
         {
             "name": "Counter",
-            "base": "examples/counter"
+            "base": "examples/counter",
+            "files": ["counter.cpp"]
         }
     ],
     "export": {
