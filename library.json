@@ -1,6 +1,6 @@
 {
     "name": "SailTrack Module",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Base library required for all SailTrack's ESP32-based modules.",
     "keywords": "sailtrack, module, sailing",
     "repository": {
@@ -32,6 +32,9 @@
         }
     ],
     "export": {
-        "exclude": ["test"]
+        "exclude": [
+            "test",
+            ".github"
+        ]
     }
 }
