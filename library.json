@@ -3,13 +3,11 @@
     "version": "1.0.0",
     "description": "Base library required for all SailTrack's ESP32-based modules.",
     "keywords": "sailtrack, module, sailing",
-    "repository":
-    {
+    "repository": {
         "type": "git",
         "url": "https://github.com/metis-vela-unipd/sailtrack-module.git"
     },
-    "authors": 
-    [
+    "authors": [
         {
             "name": "Matteo Carnelos",
             "email": "matteo.carnelos@studenti.unipd.it",
@@ -18,8 +16,22 @@
     ],
     "license": "GPL-3.0",
     "dependencies": {
-        "bblanchon/ArduinoJson": "^6.19.1"
+        "bblanchon/ArduinoJson": "^6.19.1",
+        "WiFi": "*",
+        "ArduinoOTA": "*",
+        "Update": "*",
+        "ESPmDNS": "*"
     },
     "frameworks": ["Arduino"],
-    "platforms": ["espressif32"]
+    "platforms": ["espressif32"],
+    "examples": [
+        {
+            "name": "Counter",
+            "base": "examples/counter",
+            "files": ["counter.cpp"]
+        }
+    ],
+    "export": {
+        "exclude": ["test"]
+    }
 }
