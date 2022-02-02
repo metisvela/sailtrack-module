@@ -16,7 +16,11 @@
     ],
     "license": "GPL-3.0",
     "dependencies": {
-        "bblanchon/ArduinoJson": "^6.19.1"
+        "bblanchon/ArduinoJson": "^6.19.1",
+        "WiFi": "*",
+        "ArduinoOTA": "*",
+        "Update": "*",
+        "ESPmDNS": "*"
     },
     "frameworks": ["Arduino"],
     "platforms": ["espressif32"],
@@ -28,9 +32,6 @@
         }
     ],
     "export": {
-        "exclude": [
-            "examples",
-            "test"
-        ]
+        "exclude": ["test"]
     }
 }

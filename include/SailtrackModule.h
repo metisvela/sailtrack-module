@@ -1,12 +1,17 @@
 #ifndef SAILTRACK_MODULE_H
 #define SAILTRACK_MODULE_H
 
-#include "SailtrackModuleConfig.h"
+#define USE_ESP_IDF_LOG
+#undef LOG_LOCAL_LEVEL
+#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include <mqtt_client.h>
 #include <ArduinoOTA.h>
 #include <ArduinoJson.h>
+
+#include "SailtrackModuleConfig.h"
 #include "SailtrackModuleCallbacks.h"
 
 class SailtrackModule {
