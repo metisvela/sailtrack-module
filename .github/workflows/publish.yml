@@ -1,4 +1,4 @@
-name: Publish on PlatformIO Registry
+name: Publish to PlatformIO Registry
 
 on:
   push:
