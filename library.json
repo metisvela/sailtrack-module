@@ -18,8 +18,8 @@
     "dependencies": {
         "bblanchon/ArduinoJson": "^6.19.1"
     },
-    "frameworks": ["Arduino"],
-    "platforms": ["espressif32"],
+    "frameworks": "arduino",
+    "platforms": "espressif32",
     "examples": [
         {
             "name": "Counter",
