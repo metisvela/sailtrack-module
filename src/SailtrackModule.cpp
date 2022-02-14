@@ -197,13 +197,12 @@ int SailtrackModule::m_vprintf(const char * format, va_list args) {
         char message[200];
         char topic[50];
         int messageSize;
-        sprintf(topic, "module/%s", name);
+        sprintf(topic, "log/%s", name);
         vsprintf(message, format, args);
         for (messageSize = 0; message[messageSize]; messageSize++);
         message[messageSize - 1] = 0;
         DynamicJsonDocument payload(500);
-        JsonObject log = payload.createNestedObject("log");
-        log["message"] = message;
+        payload["message"] = message;
         publish(topic, payload);
     }
     return vprintf(format, args);
