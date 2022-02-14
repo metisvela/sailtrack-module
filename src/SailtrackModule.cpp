@@ -12,6 +12,7 @@ esp_mqtt_client_config_t SailtrackModule::mqttConfig;
 esp_mqtt_client_handle_t SailtrackModule::mqttClient;
 bool SailtrackModule::mqttConnected;
 int SailtrackModule::publishedMessagesCount;
+int SailtrackModule::receivedMessagesCount;
 
 void SailtrackModule::configWifi(const char * ssid, const char * password, IPAddress gateway, IPAddress subnet) {
     wifiConfig.ssid = ssid;
@@ -148,6 +149,7 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
             char message[500];
             sprintf(topic, "%.*s", event->topic_len, event->topic);
             sprintf(message, "%.*s", event->data_len, event->data);
+            receivedMessagesCount++;
             if (callbacks) callbacks->onMqttMessage(topic, message);
             break;
         case MQTT_EVENT_DISCONNECTED:
@@ -181,6 +183,7 @@ void SailtrackModule::statusTask(void * pvArguments) {
 void SailtrackModule::logTask(void * pvArguments) {
     while(true) {
         ESP_LOGI(LOG_TAG, "Published messages: %d", publishedMessagesCount);
+        ESP_LOGI(LOG_TAG, "Received messages: %d", receivedMessagesCount);
         delay(LOG_PUBLISH_PERIOD_MS);
     }
 }

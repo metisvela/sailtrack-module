@@ -31,6 +31,7 @@ class SailtrackModule {
     static esp_mqtt_client_handle_t mqttClient;
     static bool mqttConnected;
     static int publishedMessagesCount;
+    static int receivedMessagesCount;
     static void beginLogging();
     static void beginWifi(IPAddress ip);
     static void beginOTA();
