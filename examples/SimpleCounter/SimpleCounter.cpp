@@ -2,6 +2,8 @@
 
 #include <SailtrackModule.h>
 
+SailtrackModule STM;
+
 class TestCallbacks: public SailtrackModuleCallbacks {
 	void onWifiConnectionBegin() {
 		// Notify user
@@ -29,17 +31,16 @@ void publishTask(void * pvArguments) {
 	while(true) {
 		DynamicJsonDocument data(100);
 		data["count"] = counter++;
-		STModule.publish("sensor/counter0", "counter0", data);
+		STM.publish("sensor/counter0", data);
 		delay(1000);
 	}
 }
 
 void setup() {
-	STModule.begin("counter", "sailtrack-counter", IPAddress(192, 168, 42, 100));
-	STModule.setCallbacks(new TestCallbacks());
-	STModule.subscribe("sensor/counter0");
+	STM.begin("counter", IPAddress(192, 168, 42, 100));
+	STM.setCallbacks(new TestCallbacks());
+	STM.subscribe("sensor/counter0");
 	xTaskCreate(publishTask, "publish_task", 10000, NULL, 1, NULL);
 }
 
-void loop() {
-}
+void loop() {}

@@ -3,22 +3,35 @@
 static const char * LOG_TAG = "SAILTRACK_MODULE";
 
 const char * SailtrackModule::name;
-const char * SailtrackModule::hostname;
-IPAddress SailtrackModule::ipAddress;
 
 SailtrackModuleCallbacks * SailtrackModule::callbacks;
+
+WifiConfig SailtrackModule::wifiConfig;
 
 esp_mqtt_client_config_t SailtrackModule::mqttConfig;
 esp_mqtt_client_handle_t SailtrackModule::mqttClient;
 bool SailtrackModule::mqttConnected;
 int SailtrackModule::publishedMessagesCount;
+int SailtrackModule::receivedMessagesCount;
 
-void SailtrackModule::begin(const char * name, const char * hostname, IPAddress ipAddress) {
+void SailtrackModule::configWifi(const char * ssid, const char * password, IPAddress gateway, IPAddress subnet) {
+    wifiConfig.ssid = ssid;
+    wifiConfig.password = password;
+    wifiConfig.gateway = gateway;
+    wifiConfig.subnet = subnet;
+}
+
+void SailtrackModule::configMqtt(IPAddress host, int port, const char * username, const char * password) {
+    mqttConfig.host = strdup(host.toString().c_str());
+    mqttConfig.port = port;
+    mqttConfig.username = username;
+    mqttConfig.password = password;
+}
+
+void SailtrackModule::begin(const char * name, IPAddress ip) {
     SailtrackModule::name = name;
-    SailtrackModule::hostname = hostname;
-    SailtrackModule::ipAddress = ipAddress;
     beginLogging();
-    beginWifi();
+    beginWifi(ip);
     beginOTA();
     beginMqtt();
 }
@@ -30,31 +43,39 @@ void SailtrackModule::beginLogging() {
     esp_log_level_set(LOG_TAG, ESP_LOG_INFO);
 }
 
-void SailtrackModule::beginWifi() {
+void SailtrackModule::beginWifi(IPAddress ip) {
+    if (!wifiConfig.ssid) wifiConfig.ssid = WIFI_DEFAULT_SSID;
+    if (!wifiConfig.password) wifiConfig.password = WIFI_DEFAULT_PASSWORD;
+    if (!wifiConfig.gateway) wifiConfig.gateway = WIFI_DEFAULT_GATEWAY;
+    if (!wifiConfig.subnet) wifiConfig.subnet = WIFI_DEFAULT_SUBNET;
+    char hostname[30] = "sailtrack-";
+    wifiConfig.hostname = strdup(strcat(hostname, name));
+    wifiConfig.ip = ip;
+
     WiFi.mode(WIFI_STA);
-    WiFi.setHostname(hostname);
-    WiFi.config(ipAddress, WIFI_GATEWAY, WIFI_SUBNET);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    WiFi.setHostname(wifiConfig.hostname);
+    WiFi.config(wifiConfig.ip, wifiConfig.gateway, wifiConfig.subnet);
+    WiFi.begin(wifiConfig.ssid, wifiConfig.password);
 
     if (callbacks) callbacks->onWifiConnectionBegin();
     
-    ESP_LOGI(LOG_TAG, "Connecting to '%s'...", WIFI_SSID);
+    ESP_LOGI(LOG_TAG, "Connecting to '%s'...", wifiConfig.ssid);
 
     for (int i = 0; WiFi.status() != WL_CONNECTED && i < WIFI_CONNECTION_TIMEOUT_MS / 500 ; i++)
         delay(500);
 
     if (WiFi.status() != WL_CONNECTED) {
-        ESP_LOGE(LOG_TAG, "Impossible to connect to '%s'", WIFI_SSID);
-        ESP_LOGE(LOG_TAG, "Going to deep sleep, goodnight...");
+        ESP_LOGI(LOG_TAG, "Impossible to connect to '%s'", wifiConfig.ssid);
+        ESP_LOGI(LOG_TAG, "Going to deep sleep, goodnight...");
         ESP.deepSleep(WIFI_SLEEP_DURATION_US);
     }
 
     if (callbacks) callbacks->onWifiConnectionResult(WiFi.status());
 
-    ESP_LOGI(LOG_TAG, "Successfully connected to '%s'!", WIFI_SSID);
+    ESP_LOGI(LOG_TAG, "Successfully connected to '%s'!", wifiConfig.ssid);
 
     WiFi.onEvent([](WiFiEvent_t event) {
-        ESP_LOGE(LOG_TAG, "Lost connection to '%s'", WIFI_SSID);
+        ESP_LOGE(LOG_TAG, "Lost connection to '%s'", wifiConfig.ssid);
         if (callbacks) callbacks->onWifiDisconnected();
         ESP_LOGE(LOG_TAG, "Rebooting...");
         ESP.restart();
@@ -81,33 +102,34 @@ void SailtrackModule::beginOTA() {
             else if (error == OTA_RECEIVE_ERROR) ESP_LOGE(LOG_TAG, "Error[%u]: Receive Failed", error);
             else if (error == OTA_END_ERROR) ESP_LOGE(LOG_TAG, "Error[%u]: End Failed", error);
         });
-    ArduinoOTA.setHostname(hostname);
+    ArduinoOTA.setHostname(wifiConfig.hostname);
     ArduinoOTA.begin();
     xTaskCreate(otaTask, "ota_task", TASK_MEDIUM_STACK_SIZE, NULL, TASK_MEDIUM_PRIORITY, NULL);
 }
 
 void SailtrackModule::beginMqtt() {
-    mqttConfig.host = MQTT_SERVER;
-    mqttConfig.port = MQTT_PORT;
-    mqttConfig.username = MQTT_USERNAME;
-    mqttConfig.password = MQTT_PASSWORD;
-    mqttConfig.client_id = hostname;
+    if (!mqttConfig.host) mqttConfig.host = strdup(MQTT_DEFAULT_HOST.toString().c_str());
+    if (!mqttConfig.port) mqttConfig.port = MQTT_DEFAULT_PORT;
+    if (!mqttConfig.username) mqttConfig.username = MQTT_DEFAULT_USERNAME;
+    if (!mqttConfig.password) mqttConfig.password = MQTT_DEFAULT_PASSWORD;
+    mqttConfig.client_id = wifiConfig.hostname;
+
     mqttClient = esp_mqtt_client_init(&mqttConfig);
     esp_mqtt_client_start(mqttClient);
     esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_CONNECTED, mqttEventHandler, NULL);
 
-    ESP_LOGI(LOG_TAG, "Connecting to 'mqtt://%s@%s:%d'...", MQTT_USERNAME, MQTT_SERVER, MQTT_PORT);
+    ESP_LOGI(LOG_TAG, "Connecting to 'mqtt://%s@%s:%d'...", mqttConfig.username, mqttConfig.host, mqttConfig.port);
 
     for (int i = 0; !mqttConnected && i < MQTT_CONNECTION_TIMEOUT_MS / 500; i++)
         delay(500);
 
     if (!mqttConnected) {
-        ESP_LOGE(LOG_TAG, "Impossible to connect to 'mqtt://%s@%s:%d'", MQTT_USERNAME, MQTT_SERVER, MQTT_PORT);
+        ESP_LOGE(LOG_TAG, "Impossible to connect to 'mqtt://%s@%s:%d'", mqttConfig.username, mqttConfig.host, mqttConfig.port);
         ESP_LOGE(LOG_TAG, "Rebooting...");
         ESP.restart();
     }
 
-    ESP_LOGI(LOG_TAG, "Successfully connected to 'mqtt://%s@%s:%d'!", MQTT_USERNAME, MQTT_SERVER, MQTT_PORT);
+    ESP_LOGI(LOG_TAG, "Successfully connected to 'mqtt://%s@%s:%d'!", mqttConfig.username, mqttConfig.host, mqttConfig.port);
 
     esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_DATA, mqttEventHandler, NULL);
     esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_DISCONNECTED, mqttEventHandler, NULL);
@@ -127,6 +149,7 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
             char message[500];
             sprintf(topic, "%.*s", event->topic_len, event->topic);
             sprintf(message, "%.*s", event->data_len, event->data);
+            receivedMessagesCount++;
             if (callbacks) callbacks->onMqttMessage(topic, message);
             break;
         case MQTT_EVENT_DISCONNECTED:
@@ -152,7 +175,7 @@ void SailtrackModule::statusTask(void * pvArguments) {
 
     while(true) {
         DynamicJsonDocument payload = callbacks->getStatus();
-        publish(topic, name, payload);
+        publish(topic, payload);
         delay(STATUS_PUBLISH_PERIOD_MS);
     }
 }
@@ -160,6 +183,7 @@ void SailtrackModule::statusTask(void * pvArguments) {
 void SailtrackModule::logTask(void * pvArguments) {
     while(true) {
         ESP_LOGI(LOG_TAG, "Published messages: %d", publishedMessagesCount);
+        ESP_LOGI(LOG_TAG, "Received messages: %d", receivedMessagesCount);
         delay(LOG_PUBLISH_PERIOD_MS);
     }
 }
@@ -176,20 +200,19 @@ int SailtrackModule::m_vprintf(const char * format, va_list args) {
         char message[200];
         char topic[50];
         int messageSize;
-        sprintf(topic, "module/%s", name);
+        sprintf(topic, "log/%s", name);
         vsprintf(message, format, args);
         for (messageSize = 0; message[messageSize]; messageSize++);
         message[messageSize - 1] = 0;
         DynamicJsonDocument payload(500);
-        JsonObject log = payload.createNestedObject("log");
-        log["message"] = message;
-        publish(topic, name, payload);
+        payload["message"] = message;
+        publish(topic, payload);
     }
     return vprintf(format, args);
 }
 
-int SailtrackModule::publish(const char * topic, const char * measurement, DynamicJsonDocument payload) {
-    payload["measurement"] = measurement;
+int SailtrackModule::publish(const char * topic, DynamicJsonDocument payload) {
+    payload["measurement"] = strrchr(strdup(topic), '/') + 1;
     char output[MQTT_OUTPUT_BUFFER_SIZE];
     serializeJson(payload, output);
     return esp_mqtt_client_publish(mqttClient, topic, output, 0, 1, 0);
@@ -198,5 +221,3 @@ int SailtrackModule::publish(const char * topic, const char * measurement, Dynam
 int SailtrackModule::subscribe(const char * topic) {
     return esp_mqtt_client_subscribe(mqttClient, topic, 1);
 }
-
-SailtrackModule STModule;
