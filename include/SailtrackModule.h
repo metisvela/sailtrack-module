@@ -14,17 +14,25 @@
 #include "SailtrackModuleConfig.h"
 #include "SailtrackModuleCallbacks.h"
 
+struct WifiConfig {
+    const char * hostname;
+    const char * ssid;
+    const char * password;
+    IPAddress ip;
+    IPAddress gateway;
+    IPAddress subnet;
+};
+
 class SailtrackModule {
     static const char * name;
-    static const char * hostname;
-    static IPAddress ipAddress;
     static SailtrackModuleCallbacks * callbacks;
+    static WifiConfig wifiConfig;
     static esp_mqtt_client_config_t mqttConfig;
     static esp_mqtt_client_handle_t mqttClient;
     static bool mqttConnected;
     static int publishedMessagesCount;
     static void beginLogging();
-    static void beginWifi();
+    static void beginWifi(IPAddress ip);
     static void beginOTA();
     static void beginMqtt();
     static void mqttEventHandler(void * handlerArgs, esp_event_base_t base, int32_t eventId, void * eventData);
@@ -33,12 +41,12 @@ class SailtrackModule {
     static void otaTask(void * pvArguments);
     static int m_vprintf(const char * format, va_list args);
     public:
-        static void begin(const char * name, const char * hostname, IPAddress ipAddress);
+        static void configWifi(const char * ssid, const char * password, IPAddress gateway, IPAddress subnet);
+        static void configMqtt(IPAddress host, int port, const char * username, const char * password);
+        static void begin(const char * name, IPAddress ip);
         static void setCallbacks(SailtrackModuleCallbacks * callbacks);
-        static int publish(const char * topic, const char * measurement, DynamicJsonDocument payload);
+        static int publish(const char * topic, DynamicJsonDocument payload);
         static int subscribe(const char * topic);
 };
-
-extern SailtrackModule STModule;
 
 #endif

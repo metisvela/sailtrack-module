@@ -20,13 +20,6 @@
     },
     "frameworks": "arduino",
     "platforms": "espressif32",
-    "examples": [
-        {
-            "name": "Counter",
-            "base": "examples/counter",
-            "files": ["counter.cpp"]
-        }
-    ],
     "export": {
         "exclude": [
             "test",
