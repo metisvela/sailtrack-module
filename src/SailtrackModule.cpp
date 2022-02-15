@@ -64,19 +64,19 @@ void SailtrackModule::beginWifi(IPAddress ip) {
     for (int i = 0; WiFi.status() != WL_CONNECTED && i < WIFI_CONNECTION_TIMEOUT_MS / 500 ; i++)
         delay(500);
 
+    if (callbacks) callbacks->onWifiConnectionResult(WiFi.status());
+
     if (WiFi.status() != WL_CONNECTED) {
         ESP_LOGI(LOG_TAG, "Impossible to connect to '%s'", wifiConfig.ssid);
         ESP_LOGI(LOG_TAG, "Going to deep sleep, goodnight...");
         ESP.deepSleep(WIFI_SLEEP_DURATION_US);
     }
 
-    if (callbacks) callbacks->onWifiConnectionResult(WiFi.status());
-
     ESP_LOGI(LOG_TAG, "Successfully connected to '%s'!", wifiConfig.ssid);
 
     WiFi.onEvent([](WiFiEvent_t event) {
-        ESP_LOGE(LOG_TAG, "Lost connection to '%s'", wifiConfig.ssid);
         if (callbacks) callbacks->onWifiDisconnected();
+        ESP_LOGE(LOG_TAG, "Lost connection to '%s'", wifiConfig.ssid);
         ESP_LOGE(LOG_TAG, "Rebooting...");
         ESP.restart();
     }, SYSTEM_EVENT_STA_DISCONNECTED);
@@ -118,10 +118,14 @@ void SailtrackModule::beginMqtt() {
     esp_mqtt_client_start(mqttClient);
     esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_CONNECTED, mqttEventHandler, NULL);
 
+    if (callbacks) callbacks->onMqttConnectionBegin();
+
     ESP_LOGI(LOG_TAG, "Connecting to 'mqtt://%s@%s:%d'...", mqttConfig.username, mqttConfig.host, mqttConfig.port);
 
     for (int i = 0; !mqttConnected && i < MQTT_CONNECTION_TIMEOUT_MS / 500; i++)
         delay(500);
+
+    if (callbacks) callbacks->onMqttConnectionResult(mqttConnected);
 
     if (!mqttConnected) {
         ESP_LOGE(LOG_TAG, "Impossible to connect to 'mqtt://%s@%s:%d'", mqttConfig.username, mqttConfig.host, mqttConfig.port);
@@ -135,13 +139,13 @@ void SailtrackModule::beginMqtt() {
     esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_DISCONNECTED, mqttEventHandler, NULL);
     esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_PUBLISHED, mqttEventHandler, NULL);
     xTaskCreate(logTask, "log_task", TASK_MEDIUM_STACK_SIZE, NULL, TASK_LOW_PRIORITY, NULL);
+    xTaskCreate(statusTask, "status_task", TASK_MEDIUM_STACK_SIZE, NULL, TASK_MEDIUM_PRIORITY, NULL);
 }
 
 void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base, int32_t eventId, void * eventData) {
     esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t)eventData;
     switch((esp_mqtt_event_id_t)eventId) {
         case MQTT_EVENT_CONNECTED:
-            if (callbacks) callbacks->onMqttConnected();
             mqttConnected = true;
             break;
         case MQTT_EVENT_DATA:
@@ -154,7 +158,9 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
             break;
         case MQTT_EVENT_DISCONNECTED:
             if (callbacks) callbacks->onMqttDisconnected();
-            mqttConnected = false;
+            ESP_LOGE(LOG_TAG, "Lost connection to 'mqtt://%s@%s:%d'...", mqttConfig.username, mqttConfig.host, mqttConfig.port);
+            ESP_LOGE(LOG_TAG, "Rebooting...");
+            ESP.restart();
             break;
         case MQTT_EVENT_PUBLISHED:
             publishedMessagesCount++;
@@ -166,7 +172,6 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
 
 void SailtrackModule::setCallbacks(SailtrackModuleCallbacks * callbacks) {
     SailtrackModule::callbacks = callbacks;
-    xTaskCreate(statusTask, "status_task", TASK_MEDIUM_STACK_SIZE, NULL, TASK_MEDIUM_PRIORITY, NULL);
 }
 
 void SailtrackModule::statusTask(void * pvArguments) {
@@ -174,16 +179,17 @@ void SailtrackModule::statusTask(void * pvArguments) {
     sprintf(topic, "module/%s", name);
 
     while(true) {
-        DynamicJsonDocument payload = callbacks->getStatus();
-        publish(topic, payload);
+        if (callbacks) {
+            DynamicJsonDocument payload = callbacks->getStatus();
+            publish(topic, payload);
+        }
         delay(STATUS_PUBLISH_PERIOD_MS);
     }
 }
 
 void SailtrackModule::logTask(void * pvArguments) {
     while(true) {
-        ESP_LOGI(LOG_TAG, "Published messages: %d", publishedMessagesCount);
-        ESP_LOGI(LOG_TAG, "Received messages: %d", receivedMessagesCount);
+        ESP_LOGI(LOG_TAG, "Published messages: %d, Received messages: %d", publishedMessagesCount, receivedMessagesCount);
         delay(LOG_PUBLISH_PERIOD_MS);
     }
 }

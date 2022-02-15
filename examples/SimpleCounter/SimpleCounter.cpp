@@ -5,13 +5,12 @@
 SailtrackModule STM;
 
 class TestCallbacks: public SailtrackModuleCallbacks {
-	void onWifiConnectionBegin() {
-		// Notify user
-	}
-	
-	void onWifiConnectionResult(wl_status_t status) {
-		// Notify user
-	}
+	void onWifiConnectionBegin() {}
+	void onWifiConnectionResult(wl_status_t status) {}
+	void onWifiDisconnected() {}
+	void onMqttConnectionBegin() {}
+	void onMqttConnectionResult(bool connected) {}
+	void onMqttDisconnected() {}
 
 	DynamicJsonDocument getStatus() {
 		// Read module status
@@ -37,8 +36,8 @@ void publishTask(void * pvArguments) {
 }
 
 void setup() {
-	STM.begin("counter", IPAddress(192, 168, 42, 100));
 	STM.setCallbacks(new TestCallbacks());
+	STM.begin("counter", IPAddress(192, 168, 42, 100));
 	STM.subscribe("sensor/counter0");
 	xTaskCreate(publishTask, "publish_task", 10000, NULL, 1, NULL);
 }
