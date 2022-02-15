@@ -182,8 +182,7 @@ void SailtrackModule::statusTask(void * pvArguments) {
 
 void SailtrackModule::logTask(void * pvArguments) {
     while(true) {
-        ESP_LOGI(LOG_TAG, "Published messages: %d", publishedMessagesCount);
-        ESP_LOGI(LOG_TAG, "Received messages: %d", receivedMessagesCount);
+        ESP_LOGI(LOG_TAG, "Published messages: %d, Received messages: %d", publishedMessagesCount, receivedMessagesCount);
         delay(LOG_PUBLISH_PERIOD_MS);
     }
 }
