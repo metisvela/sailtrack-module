@@ -176,7 +176,7 @@ void SailtrackModule::setCallbacks(SailtrackModuleCallbacks * callbacks) {
 
 void SailtrackModule::statusTask(void * pvArguments) {
     char topic[50];
-    sprintf(topic, "module/%s", name);
+    sprintf(topic, "status/%s", name);
 
     while(true) {
         if (callbacks) {
