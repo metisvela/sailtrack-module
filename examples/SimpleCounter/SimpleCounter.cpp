@@ -26,20 +26,14 @@ class TestCallbacks: public SailtrackModuleCallbacks {
 
 int counter = 0;
 
-void publishTask(void * pvArguments) {
-	while(true) {
-		DynamicJsonDocument data(100);
-		data["count"] = counter++;
-		STM.publish("sensor/counter0", data);
-		delay(1000);
-	}
-}
-
 void setup() {
-	STM.setCallbacks(new TestCallbacks());
-	STM.begin("counter", IPAddress(192, 168, 42, 100));
+	STM.begin("counter", IPAddress(192, 168, 42, 100), new TestCallbacks());
 	STM.subscribe("sensor/counter0");
-	xTaskCreate(publishTask, "publish_task", 10000, NULL, 1, NULL);
 }
 
-void loop() {}
+void loop() {
+	DynamicJsonDocument data(100);
+	data["count"] = counter++;
+	STM.publish("sensor/counter0", data);
+	delay(1000);
+}
