@@ -27,6 +27,7 @@ class SailtrackModule {
     static const char * name;
     static SailtrackModuleCallbacks * callbacks;
     static int notificationLed;
+    static bool notificationLedReversed;
     static WifiConfig wifiConfig;
     static esp_mqtt_client_config_t mqttConfig;
     static esp_mqtt_client_handle_t mqttClient;
@@ -49,11 +50,7 @@ class SailtrackModule {
     public:
         static void configWifi(const char * ssid, const char * password, IPAddress gateway, IPAddress subnet);
         static void configMqtt(IPAddress host, int port, const char * username, const char * password);
-        #ifdef LED_BUILTIN
-        static void begin(const char * name, IPAddress ip, SailtrackModuleCallbacks * callbacks = NULL, int notificationLed = LED_BUILTIN);
-        #else
-        static void begin(const char * name, IPAddress ip, SailtrackModuleCallbacks * callbacks = NULL, int notificationLed = -1);
-        #endif
+        static void begin(const char * name, IPAddress ip, SailtrackModuleCallbacks * callbacks = NULL, int notificationLed = -1, bool notificationLedReversed = false);
         static int publish(const char * topic, DynamicJsonDocument payload);
         static int subscribe(const char * topic);
 };

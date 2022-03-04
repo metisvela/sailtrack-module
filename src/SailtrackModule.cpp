@@ -6,6 +6,7 @@ const char * SailtrackModule::name;
 
 SailtrackModuleCallbacks * SailtrackModule::callbacks;
 int SailtrackModule::notificationLed;
+bool SailtrackModule::notificationLedReversed;
 
 WifiConfig SailtrackModule::wifiConfig;
 
@@ -29,12 +30,13 @@ void SailtrackModule::configMqtt(IPAddress host, int port, const char * username
     mqttConfig.password = password;
 }
 
-void SailtrackModule::begin(const char * name, IPAddress ip, SailtrackModuleCallbacks * callbacks, int notificationLed) {
+void SailtrackModule::begin(const char * name, IPAddress ip, SailtrackModuleCallbacks * callbacks, int notificationLed, bool notificationLedReversed) {
     vTaskPrioritySet(NULL, TASK_HIGH_PRIORITY);
 
     SailtrackModule::name = name;
     SailtrackModule::callbacks = callbacks;
     SailtrackModule::notificationLed = notificationLed;
+    SailtrackModule::notificationLedReversed = notificationLedReversed;
 
     char hostname[30] = "sailtrack-";
     wifiConfig.hostname = strdup(strcat(hostname, name));
@@ -60,6 +62,7 @@ void SailtrackModule::begin(const char * name, IPAddress ip, SailtrackModuleCall
 
 void SailtrackModule::beginNotificationLed() {
     pinMode(notificationLed, OUTPUT);
+    digitalWrite(notificationLed, notificationLedReversed ? HIGH : LOW);
     xTaskCreate(notificationLedTask, "notificationLedTask", TASK_SMALL_STACK_SIZE, NULL, TASK_LOW_PRIORITY, NULL);
 }
 
@@ -186,14 +189,14 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
 void SailtrackModule::notificationLedTask(void * pvArguments) {
     while(true) {
         if (WiFi.status() != WL_CONNECTED) {
-            digitalWrite(notificationLed, HIGH);
+            digitalWrite(notificationLed, notificationLedReversed ? LOW : HIGH);
             delay(500);
-            digitalWrite(notificationLed, LOW);
+            digitalWrite(notificationLed, notificationLedReversed ? HIGH : LOW);
             delay(500);
         } else {
-            digitalWrite(notificationLed, HIGH);
+            digitalWrite(notificationLed, notificationLedReversed ? LOW : HIGH);
             delay(3000);
-            digitalWrite(notificationLed, LOW);
+            digitalWrite(notificationLed, notificationLedReversed ? HIGH : LOW);
             break;
         }
     }
