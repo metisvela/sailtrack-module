@@ -62,6 +62,7 @@ void SailtrackModule::begin(const char * name, IPAddress ip, SailtrackModuleCall
 
 void SailtrackModule::beginNotificationLed() {
     pinMode(notificationLed, OUTPUT);
+    digitalWrite(notificationLed, notificationLedReversed ? HIGH : LOW);
     xTaskCreate(notificationLedTask, "notificationLedTask", TASK_SMALL_STACK_SIZE, NULL, TASK_LOW_PRIORITY, NULL);
 }
 
