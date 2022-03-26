@@ -5,8 +5,7 @@ static const char * LOG_TAG = "SAILTRACK_MODULE";
 const char * SailtrackModule::name;
 
 SailtrackModuleCallbacks * SailtrackModule::callbacks;
-int SailtrackModule::notificationLed;
-bool SailtrackModule::notificationLedReversed;
+NotificationLed * SailtrackModule::notificationLed;
 
 WifiConfig SailtrackModule::wifiConfig;
 
@@ -30,13 +29,17 @@ void SailtrackModule::configMqtt(IPAddress host, int port, const char * username
     mqttConfig.password = password;
 }
 
-void SailtrackModule::begin(const char * name, IPAddress ip, SailtrackModuleCallbacks * callbacks, int notificationLed, bool notificationLedReversed) {
+void SailtrackModule::setNotificationLed(int pin, bool reversed) {
+    notificationLed = new NotificationLed();
+    notificationLed->pin = pin;
+    notificationLed->reversed = reversed;
+}
+
+void SailtrackModule::begin(const char * name, IPAddress ip, SailtrackModuleCallbacks * callbacks) {
     vTaskPrioritySet(NULL, TASK_HIGH_PRIORITY);
 
     SailtrackModule::name = name;
     SailtrackModule::callbacks = callbacks;
-    SailtrackModule::notificationLed = notificationLed;
-    SailtrackModule::notificationLedReversed = notificationLedReversed;
 
     char hostname[30] = "sailtrack-";
     wifiConfig.hostname = strdup(strcat(hostname, name));
@@ -52,7 +55,7 @@ void SailtrackModule::begin(const char * name, IPAddress ip, SailtrackModuleCall
     if (!mqttConfig.username) mqttConfig.username = MQTT_DEFAULT_USERNAME;
     if (!mqttConfig.password) mqttConfig.password = MQTT_DEFAULT_PASSWORD;
 
-    if (notificationLed != -1) 
+    if (notificationLed) 
         beginNotificationLed();
     beginLogging();
     beginWifi();
@@ -61,8 +64,8 @@ void SailtrackModule::begin(const char * name, IPAddress ip, SailtrackModuleCall
 }
 
 void SailtrackModule::beginNotificationLed() {
-    pinMode(notificationLed, OUTPUT);
-    digitalWrite(notificationLed, notificationLedReversed ? HIGH : LOW);
+    pinMode(notificationLed->pin, OUTPUT);
+    digitalWrite(notificationLed->pin, notificationLed->reversed ? HIGH : LOW);
     xTaskCreate(notificationLedTask, "notificationLedTask", TASK_SMALL_STACK_SIZE, NULL, TASK_LOW_PRIORITY, NULL);
 }
 
@@ -189,14 +192,14 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
 void SailtrackModule::notificationLedTask(void * pvArguments) {
     while(true) {
         if (WiFi.status() != WL_CONNECTED) {
-            digitalWrite(notificationLed, notificationLedReversed ? LOW : HIGH);
+            digitalWrite(notificationLed->pin, notificationLed->reversed ? LOW : HIGH);
             delay(500);
-            digitalWrite(notificationLed, notificationLedReversed ? HIGH : LOW);
+            digitalWrite(notificationLed->pin, notificationLed->reversed ? HIGH : LOW);
             delay(500);
         } else {
-            digitalWrite(notificationLed, notificationLedReversed ? LOW : HIGH);
+            digitalWrite(notificationLed->pin, notificationLed->reversed ? LOW : HIGH);
             delay(3000);
-            digitalWrite(notificationLed, notificationLedReversed ? HIGH : LOW);
+            digitalWrite(notificationLed->pin, notificationLed->reversed ? HIGH : LOW);
             break;
         }
     }
@@ -209,24 +212,24 @@ void SailtrackModule::statusTask(void * pvArguments) {
 
     while(true) {
         if (callbacks) {
-            DynamicJsonDocument payload = callbacks->getStatus();
-            publish(topic, payload);
+            DynamicJsonDocument * payload = callbacks->getStatus();
+            if (payload) publish(topic, payload);
         }
-        delay(1000 / STATUS_PUBLISH_RATE);
+        delay(1000 / TASK_STATUS_PUBLISH_RATE);
     }
 }
 
 void SailtrackModule::logTask(void * pvArguments) {
     while(true) {
         ESP_LOGI(LOG_TAG, "Published messages: %d, Received messages: %d", publishedMessagesCount, receivedMessagesCount);
-        delay(1000 / LOG_PUBLISH_RATE);
+        delay(1000 / TASK_LOG_PUBLISH_RATE);
     }
 }
 
 void SailtrackModule::otaTask(void * pvArguments) {
     while (true) {
         ArduinoOTA.handle();
-        delay(1000 / OTA_HANDLE_RATE);
+        delay(1000 / TASK_OTA_HANDLE_RATE);
     }
 }
 
@@ -241,15 +244,15 @@ int SailtrackModule::m_vprintf(const char * format, va_list args) {
         message[messageSize - 1] = 0;
         DynamicJsonDocument payload(500);
         payload["message"] = message;
-        publish(topic, payload);
+        publish(topic, &payload);
     }
     return vprintf(format, args);
 }
 
-int SailtrackModule::publish(const char * topic, DynamicJsonDocument payload) {
-    payload["measurement"] = strrchr(strdup(topic), '/') + 1;
+int SailtrackModule::publish(const char * topic, DynamicJsonDocument * payload) {
+    (*payload)["measurement"] = strrchr(strdup(topic), '/') + 1;
     char output[MQTT_OUTPUT_BUFFER_SIZE];
-    serializeJson(payload, output);
+    serializeJson(*payload, output);
     return esp_mqtt_client_publish(mqttClient, topic, output, 0, 1, 0);
 }
 
