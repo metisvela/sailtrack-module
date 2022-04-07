@@ -1,9 +1,9 @@
-name: Publish to PlatformIO Registry
+name: Publish PlatformIO Package
 
 on:
   push:
     tags:
-      - '*'
+      - 'v*.*.*'
 
 jobs:
   publish:
@@ -11,14 +11,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      
-      - name: Cache pip
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
             
       - name: Cache PlatformIO
         uses: actions/cache@v3
@@ -28,6 +20,8 @@ jobs:
           
       - name: Set up Python
         uses: actions/setup-python@v3
+        with:
+          cache: 'pip'
         
       - name: Install PlatformIO
         run: |
