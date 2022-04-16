@@ -8,6 +8,12 @@ class SailtrackModuleCallbacks {
     public:
 
         /**
+         * Called when the module is entering deep sleep mode. Use this callback to power off peripherals so to save 
+         * power during deep sleep.
+         */
+        virtual void onDeepSleepEnter() {}
+
+        /**
          * Called when the connection to the WiFi network begins.
          */ 
         virtual void onWifiConnectionBegin() {}

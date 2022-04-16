@@ -94,6 +94,7 @@ void SailtrackModule::beginWifi() {
     if (WiFi.status() != WL_CONNECTED) {
         ESP_LOGI(LOG_TAG, "Impossible to connect to '%s'", wifiConfig.ssid);
         ESP_LOGI(LOG_TAG, "Going to deep sleep, goodnight...");
+        if (callbacks) callbacks->onDeepSleepEnter();
         ESP.deepSleep(WIFI_SLEEP_DURATION_US);
     }
 
