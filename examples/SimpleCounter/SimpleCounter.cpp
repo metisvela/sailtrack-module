@@ -1,14 +1,14 @@
 #define USE_ESP_IDF_LOG
 
 #include <Arduino.h>
-
 #include <SailtrackModule.h>
 
-SailtrackModule STM;
+SailtrackModule stm;
 
 static const char * LOG_TAG = "SAILTRACK_COUNTER";
 
 class TestCallbacks: public SailtrackModuleCallbacks {
+	void onDeepSleepEnter() {}
 	void onWifiConnectionBegin() {}
 	void onWifiConnectionResult(wl_status_t status) {}
 	void onWifiDisconnected() {}
@@ -26,14 +26,14 @@ class TestCallbacks: public SailtrackModuleCallbacks {
 int counter = 0;
 
 void setup() {
-	STM.begin("counter", IPAddress(192, 168, 42, 100), new TestCallbacks());
-	STM.subscribe("sensor/counter0");
+	stm.begin("counter", IPAddress(192, 168, 42, 100), new TestCallbacks());
+	stm.subscribe("sensor/counter0");
 	esp_log_level_set(LOG_TAG, ESP_LOG_INFO);
 }
 
 void loop() {
 	DynamicJsonDocument data(100);
 	data["count"] = counter++;
-	STM.publish("sensor/counter0", &data);
+	stm.publish("sensor/counter0", &data);
 	delay(1000);
 }
