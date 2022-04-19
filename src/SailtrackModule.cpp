@@ -199,8 +199,6 @@ void SailtrackModule::notificationLedTask(void * pvArguments) {
             delay(500);
         } else {
             digitalWrite(notificationLed->pin, notificationLed->reversed ? LOW : HIGH);
-            delay(3000);
-            digitalWrite(notificationLed->pin, notificationLed->reversed ? HIGH : LOW);
             break;
         }
     }
@@ -216,21 +214,21 @@ void SailtrackModule::statusTask(void * pvArguments) {
             DynamicJsonDocument * payload = callbacks->getStatus();
             if (payload) publish(topic, payload);
         }
-        delay(1000 / TASK_STATUS_PUBLISH_RATE);
+        delay(1000 / MQTT_STATUS_PUBLISH_RATE_HZ);
     }
 }
 
 void SailtrackModule::logTask(void * pvArguments) {
     while(true) {
         ESP_LOGI(LOG_TAG, "Published messages: %d, Received messages: %d", publishedMessagesCount, receivedMessagesCount);
-        delay(1000 / TASK_LOG_PUBLISH_RATE);
+        delay(1000 / MQTT_LOG_PUBLISH_RATE_HZ);
     }
 }
 
 void SailtrackModule::otaTask(void * pvArguments) {
     while (true) {
         ArduinoOTA.handle();
-        delay(1000 / TASK_OTA_HANDLE_RATE);
+        delay(1000 / OTA_HANDLE_RATE_HZ);
     }
 }
 
