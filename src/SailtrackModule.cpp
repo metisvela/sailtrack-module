@@ -164,7 +164,7 @@ void SailtrackModule::beginMqtt() {
 
 void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base, int32_t eventId, void * eventData) {
     esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t)eventData;
-    switch((esp_mqtt_event_id_t)eventId) {
+    switch ((esp_mqtt_event_id_t)eventId) {
         case MQTT_EVENT_CONNECTED:
             mqttConnected = true;
             break;
@@ -191,7 +191,7 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
 }
 
 void SailtrackModule::notificationLedTask(void * pvArguments) {
-    while(true) {
+    while (true) {
         if (WiFi.status() != WL_CONNECTED) {
             digitalWrite(notificationLed->pin, notificationLed->reversed ? LOW : HIGH);
             delay(500);
@@ -209,7 +209,7 @@ void SailtrackModule::statusTask(void * pvArguments) {
     char topic[50];
     sprintf(topic, "status/%s", name);
 
-    while(true) {
+    while (true) {
         if (callbacks) {
             DynamicJsonDocument * payload = callbacks->getStatus();
             if (payload) publish(topic, payload);
@@ -219,7 +219,7 @@ void SailtrackModule::statusTask(void * pvArguments) {
 }
 
 void SailtrackModule::logTask(void * pvArguments) {
-    while(true) {
+    while (true) {
         ESP_LOGI(LOG_TAG, "Published messages: %d, Received messages: %d", publishedMessagesCount, receivedMessagesCount);
         delay(1000 / MQTT_LOG_PUBLISH_RATE_HZ);
     }
