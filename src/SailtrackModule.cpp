@@ -209,26 +209,29 @@ void SailtrackModule::statusTask(void * pvArguments) {
     char topic[50];
     sprintf(topic, "status/%s", name);
 
+    TickType_t lastWakeTime = xTaskGetTickCount();
     while (true) {
         if (callbacks) {
             DynamicJsonDocument * payload = callbacks->getStatus();
             if (payload) publish(topic, payload);
         }
-        delay(1000 / MQTT_STATUS_PUBLISH_RATE_HZ);
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / MQTT_STATUS_PUBLISH_RATE_HZ));
     }
 }
 
 void SailtrackModule::logTask(void * pvArguments) {
+    TickType_t lastWakeTime = xTaskGetTickCount();
     while (true) {
         ESP_LOGI(LOG_TAG, "Published messages: %d, Received messages: %d", publishedMessagesCount, receivedMessagesCount);
-        delay(1000 / MQTT_LOG_PUBLISH_RATE_HZ);
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / MQTT_LOG_PUBLISH_RATE_HZ));
     }
 }
 
 void SailtrackModule::otaTask(void * pvArguments) {
+    TickType_t lastWakeTime = xTaskGetTickCount();
     while (true) {
         ArduinoOTA.handle();
-        delay(1000 / OTA_HANDLE_RATE_HZ);
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / OTA_HANDLE_RATE_HZ));
     }
 }
 
