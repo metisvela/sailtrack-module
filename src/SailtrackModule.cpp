@@ -208,9 +208,9 @@ void SailtrackModule::otaTask(void * pvArguments) {
 
 // ----------------------------- Wrappers ----------------------------- //
 
-int SailtrackModule::publish(const char * topic, JsonObjectConst json) {
+int SailtrackModule::publish(const char * topic, JsonObjectConst message) {
     char output[STM_MQTT_DATA_BUFFER_SIZE];
-    serializeJson(json, output);
+    serializeJson(message, output);
     return esp_mqtt_client_publish(mqttClient, topic, output, 0, 1, 0);
 }
 
