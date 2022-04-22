@@ -1,109 +1,65 @@
 #include "SailtrackModule.h"
 
-static const char * LOG_TAG = "SAILTRACK_MODULE";
+// ------------------------- Static Variables ------------------------- //
 
-const char * SailtrackModule::name;
+char SailtrackModule::name[STM_MODULE_NAME_MAX_LENGTH];
+char SailtrackModule::hostname[STM_MODULE_NAME_MAX_LENGTH+10];
 
 SailtrackModuleCallbacks * SailtrackModule::callbacks;
-NotificationLed * SailtrackModule::notificationLed;
 
-WifiConfig SailtrackModule::wifiConfig;
-
-esp_mqtt_client_config_t SailtrackModule::mqttConfig;
 esp_mqtt_client_handle_t SailtrackModule::mqttClient;
 bool SailtrackModule::mqttConnected;
 int SailtrackModule::publishedMessagesCount;
 int SailtrackModule::receivedMessagesCount;
 
-void SailtrackModule::configWifi(const char * ssid, const char * password, IPAddress gateway, IPAddress subnet) {
-    wifiConfig.ssid = ssid;
-    wifiConfig.password = password;
-    wifiConfig.gateway = gateway;
-    wifiConfig.subnet = subnet;
-}
-
-void SailtrackModule::configMqtt(IPAddress host, int port, const char * username, const char * password) {
-    mqttConfig.host = strdup(host.toString().c_str());
-    mqttConfig.port = port;
-    mqttConfig.username = username;
-    mqttConfig.password = password;
-}
-
-void SailtrackModule::setNotificationLed(int pin, bool reversed) {
-    notificationLed = new NotificationLed();
-    notificationLed->pin = pin;
-    notificationLed->reversed = reversed;
-}
+// -------------------------- Begin Methods -------------------------- //
 
 void SailtrackModule::begin(const char * name, IPAddress ip, SailtrackModuleCallbacks * callbacks) {
-    vTaskPrioritySet(NULL, TASK_HIGH_PRIORITY);
+    vTaskPrioritySet(NULL, STM_TASK_HIGH_PRIORITY);
 
-    SailtrackModule::name = name;
+    strcpy(SailtrackModule::name, name);
     SailtrackModule::callbacks = callbacks;
+    sprintf(SailtrackModule::hostname, "sailtrack-%s", name);
 
-    char hostname[30] = "sailtrack-";
-    wifiConfig.hostname = strdup(strcat(hostname, name));
-    wifiConfig.ip = ip;
-    if (!wifiConfig.ssid) wifiConfig.ssid = WIFI_DEFAULT_SSID;
-    if (!wifiConfig.password) wifiConfig.password = WIFI_DEFAULT_PASSWORD;
-    if (!wifiConfig.gateway) wifiConfig.gateway = WIFI_DEFAULT_GATEWAY;
-    if (!wifiConfig.subnet) wifiConfig.subnet = WIFI_DEFAULT_SUBNET;
-
-    mqttConfig.client_id = wifiConfig.hostname;
-    if (!mqttConfig.host) mqttConfig.host = strdup(MQTT_DEFAULT_HOST.toString().c_str());
-    if (!mqttConfig.port) mqttConfig.port = MQTT_DEFAULT_PORT;
-    if (!mqttConfig.username) mqttConfig.username = MQTT_DEFAULT_USERNAME;
-    if (!mqttConfig.password) mqttConfig.password = MQTT_DEFAULT_PASSWORD;
-
-    if (notificationLed) 
-        beginNotificationLed();
-    beginLogging();
-    beginWifi();
+    #ifdef STM_NOTIFICATION_LED_PIN
+    beginNotificationLed();
+    #endif
+    log_printf("\n");
+    beginWifi(ip);
     beginOTA();
     beginMqtt();
 }
 
+#ifdef STM_NOTIFICATION_LED_PIN
 void SailtrackModule::beginNotificationLed() {
-    pinMode(notificationLed->pin, OUTPUT);
-    digitalWrite(notificationLed->pin, notificationLed->reversed ? HIGH : LOW);
-    xTaskCreate(notificationLedTask, "notificationLedTask", TASK_SMALL_STACK_SIZE, NULL, TASK_LOW_PRIORITY, NULL);
+    pinMode(STM_NOTIFICATION_LED_PIN, OUTPUT);
+    digitalWrite(STM_NOTIFICATION_LED_PIN, !STM_NOTIFICATION_LED_ON_STATE);
+    xTaskCreate(notificationLedTask, "notificationLedTask", STM_TASK_SMALL_STACK_SIZE, NULL, STM_TASK_LOW_PRIORITY, NULL);
 }
+#endif
 
-void SailtrackModule::beginLogging() {
-    Serial.begin(115200);
-    Serial.println();
-    esp_log_set_vprintf(m_vprintf);
-    esp_log_level_set(LOG_TAG, ESP_LOG_INFO);
-}
-
-void SailtrackModule::beginWifi() {
+void SailtrackModule::beginWifi(IPAddress ip) {
     WiFi.mode(WIFI_STA);
-    WiFi.setHostname(wifiConfig.hostname);
-    WiFi.config(wifiConfig.ip, wifiConfig.gateway, wifiConfig.subnet);
-    WiFi.begin(wifiConfig.ssid, wifiConfig.password);
-
-    if (callbacks) callbacks->onWifiConnectionBegin();
+    WiFi.setHostname(hostname);
+    WiFi.config(ip, IPAddress().fromString(STM_WIFI_GATEWAY_ADDR), IPAddress().fromString(STM_WIFI_SUBNET));
+    WiFi.begin(STM_WIFI_SSID, STM_WIFI_PASSWORD);
     
-    ESP_LOGI(LOG_TAG, "Connecting to '%s'...", wifiConfig.ssid);
+    log_i("Connecting to '%s'...", STM_WIFI_SSID);
 
-    for (int i = 0; WiFi.status() != WL_CONNECTED && i < WIFI_CONNECTION_TIMEOUT_MS / 500 ; i++)
+    for (int i = 0; WiFi.status() != WL_CONNECTED && i < STM_WIFI_CONNECTION_TIMEOUT_MS / 500 ; i++)
         delay(500);
 
-    if (callbacks) callbacks->onWifiConnectionResult(WiFi.status());
-
     if (WiFi.status() != WL_CONNECTED) {
-        ESP_LOGI(LOG_TAG, "Impossible to connect to '%s'", wifiConfig.ssid);
-        ESP_LOGI(LOG_TAG, "Going to deep sleep, goodnight...");
-        if (callbacks) callbacks->onDeepSleepEnter();
-        ESP.deepSleep(WIFI_SLEEP_DURATION_US);
+        log_i("Impossible to connect to '%s'", STM_WIFI_SSID);
+        log_i("Going to deep sleep, goodnight...");
+        ESP.deepSleep(STM_WIFI_SLEEP_DURATION_US);
     }
 
-    ESP_LOGI(LOG_TAG, "Successfully connected to '%s'!", wifiConfig.ssid);
+    log_i("Successfully connected to '%s'!", STM_WIFI_SSID);
 
     WiFi.onEvent([](WiFiEvent_t event) {
-        if (callbacks) callbacks->onWifiDisconnected();
-        ESP_LOGE(LOG_TAG, "Lost connection to '%s'", wifiConfig.ssid);
-        ESP_LOGE(LOG_TAG, "Rebooting...");
+        ESP_LOGE("Lost connection to '%s'", STM_WIFI_SSID);
+        ESP_LOGE("Rebooting...");
         ESP.restart();
     }, SYSTEM_EVENT_STA_DISCONNECTED);
 }
@@ -111,56 +67,60 @@ void SailtrackModule::beginWifi() {
 void SailtrackModule::beginOTA() {
     ArduinoOTA
         .onStart([]() {
-            if (ArduinoOTA.getCommand() == U_FLASH) ESP_LOGI(LOG_TAG, "Start updating sketch...");
-            else ESP_LOGI(LOG_TAG, "Start updating filesystem...");
+            if (ArduinoOTA.getCommand() == U_FLASH) log_i("Start updating sketch...");
+            else log_i("Start updating filesystem...");
             esp_mqtt_client_stop(mqttClient);
         })
         .onEnd([]() {
-            ESP_LOGI(LOG_TAG, "Update successfully completed!");
+            log_i("Update successfully completed!");
         })
         .onProgress([](unsigned int progress, unsigned int total) {
-            ESP_LOGV(LOG_TAG, "Progress: %u", (progress / (total / 100)));
+            ESP_LOGV("Progress: %u", (progress / (total / 100)));
         })
         .onError([](ota_error_t error) {
-            if (error == OTA_AUTH_ERROR) ESP_LOGE(LOG_TAG, "Error[%u]: Auth Failed", error);
-            else if (error == OTA_BEGIN_ERROR) ESP_LOGE(LOG_TAG, "Error[%u]: Begin Failed", error);
-            else if (error == OTA_CONNECT_ERROR) ESP_LOGE(LOG_TAG, "Error[%u]: Connect Failed", error);
-            else if (error == OTA_RECEIVE_ERROR) ESP_LOGE(LOG_TAG, "Error[%u]: Receive Failed", error);
-            else if (error == OTA_END_ERROR) ESP_LOGE(LOG_TAG, "Error[%u]: End Failed", error);
+            if (error == OTA_AUTH_ERROR) log_e("Error[%u]: Auth Failed", error);
+            else if (error == OTA_BEGIN_ERROR) log_e("Error[%u]: Begin Failed", error);
+            else if (error == OTA_CONNECT_ERROR) log_e("Error[%u]: Connect Failed", error);
+            else if (error == OTA_RECEIVE_ERROR) log_e("Error[%u]: Receive Failed", error);
+            else if (error == OTA_END_ERROR) log_e("Error[%u]: End Failed", error);
         });
-    ArduinoOTA.setHostname(wifiConfig.hostname);
+    ArduinoOTA.setHostname(hostname);
     ArduinoOTA.begin();
-    xTaskCreate(otaTask, "otaTask", TASK_MEDIUM_STACK_SIZE, NULL, TASK_MEDIUM_PRIORITY, NULL);
+    xTaskCreate(otaTask, "otaTask", STM_TASK_MEDIUM_STACK_SIZE, NULL, STM_TASK_MEDIUM_PRIORITY, NULL);
 }
 
 void SailtrackModule::beginMqtt() {
+    esp_mqtt_client_config_t mqttConfig = {};
+    mqttConfig.client_id = hostname;
+    mqttConfig.host = STM_MQTT_HOST_ADDR;
+    mqttConfig.port = STM_MQTT_PORT;
+    mqttConfig.username = STM_MQTT_USERNAME;
+    mqttConfig.password = STM_MQTT_PASSWORD;
     mqttClient = esp_mqtt_client_init(&mqttConfig);
     esp_mqtt_client_start(mqttClient);
     esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_CONNECTED, mqttEventHandler, NULL);
 
-    if (callbacks) callbacks->onMqttConnectionBegin();
+    log_i("Connecting to 'mqtt://%s@%s:%d'...", STM_MQTT_USERNAME, STM_MQTT_HOST_ADDR, STM_MQTT_PORT);
 
-    ESP_LOGI(LOG_TAG, "Connecting to 'mqtt://%s@%s:%d'...", mqttConfig.username, mqttConfig.host, mqttConfig.port);
-
-    for (int i = 0; !mqttConnected && i < MQTT_CONNECTION_TIMEOUT_MS / 500; i++)
+    for (int i = 0; !mqttConnected && i < STM_MQTT_CONNECTION_TIMEOUT_MS / 500; i++)
         delay(500);
 
-    if (callbacks) callbacks->onMqttConnectionResult(mqttConnected);
-
     if (!mqttConnected) {
-        ESP_LOGE(LOG_TAG, "Impossible to connect to 'mqtt://%s@%s:%d'", mqttConfig.username, mqttConfig.host, mqttConfig.port);
-        ESP_LOGE(LOG_TAG, "Rebooting...");
+        ESP_LOGE("Impossible to connect to 'mqtt://%s@%s:%d'", STM_MQTT_USERNAME, STM_MQTT_HOST_ADDR, STM_MQTT_PORT);
+        ESP_LOGE("Rebooting...");
         ESP.restart();
     }
 
-    ESP_LOGI(LOG_TAG, "Successfully connected to 'mqtt://%s@%s:%d'!", mqttConfig.username, mqttConfig.host, mqttConfig.port);
+    log_i("Successfully connected to 'mqtt://%s@%s:%d'!", STM_MQTT_USERNAME, STM_MQTT_HOST_ADDR, STM_MQTT_PORT);
 
     esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_DATA, mqttEventHandler, NULL);
     esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_DISCONNECTED, mqttEventHandler, NULL);
     esp_mqtt_client_register_event(mqttClient, MQTT_EVENT_PUBLISHED, mqttEventHandler, NULL);
-    xTaskCreate(logTask, "logTask", TASK_MEDIUM_STACK_SIZE, NULL, TASK_LOW_PRIORITY, NULL);
-    xTaskCreate(statusTask, "statusTask", TASK_MEDIUM_STACK_SIZE, NULL, TASK_MEDIUM_PRIORITY, NULL);
+    xTaskCreate(statusTask, "statusTask", STM_TASK_MEDIUM_STACK_SIZE, NULL, STM_TASK_MEDIUM_PRIORITY, NULL);
+    xTaskCreate(logTask, "logTask", STM_TASK_MEDIUM_STACK_SIZE, NULL, STM_TASK_LOW_PRIORITY, NULL);
 }
+
+// ----------------------------- Handlers ----------------------------- //
 
 void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base, int32_t eventId, void * eventData) {
     esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t)eventData;
@@ -169,17 +129,16 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
             mqttConnected = true;
             break;
         case MQTT_EVENT_DATA:
-            char topic[20];
-            char message[500];
+            char topic[STM_MQTT_TOPIC_BUFFER_SIZE];
+            char message[STM_MQTT_DATA_BUFFER_SIZE];
             sprintf(topic, "%.*s", event->topic_len, event->topic);
             sprintf(message, "%.*s", event->data_len, event->data);
             receivedMessagesCount++;
             if (callbacks) callbacks->onMqttMessage(topic, message);
             break;
         case MQTT_EVENT_DISCONNECTED:
-            if (callbacks) callbacks->onMqttDisconnected();
-            ESP_LOGE(LOG_TAG, "Lost connection to 'mqtt://%s@%s:%d'...", mqttConfig.username, mqttConfig.host, mqttConfig.port);
-            ESP_LOGE(LOG_TAG, "Rebooting...");
+            ESP_LOGE("Lost connection to 'mqtt://%s@%s:%d'...", STM_MQTT_USERNAME, STM_MQTT_HOST_ADDR, STM_MQTT_PORT);
+            ESP_LOGE("Rebooting...");
             ESP.restart();
             break;
         case MQTT_EVENT_PUBLISHED:
@@ -190,40 +149,52 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
     }
 }
 
+// ------------------------------ Tasks ------------------------------ //
+
+#ifdef STM_NOTIFICATION_LED_PIN
 void SailtrackModule::notificationLedTask(void * pvArguments) {
-    while (true) {
-        if (WiFi.status() != WL_CONNECTED) {
-            digitalWrite(notificationLed->pin, notificationLed->reversed ? LOW : HIGH);
-            delay(500);
-            digitalWrite(notificationLed->pin, notificationLed->reversed ? HIGH : LOW);
-            delay(500);
-        } else {
-            digitalWrite(notificationLed->pin, notificationLed->reversed ? LOW : HIGH);
-            break;
-        }
+    while (!mqttConnected) {
+        digitalWrite(STM_NOTIFICATION_LED_PIN, STM_NOTIFICATION_LED_ON_STATE);
+        delay(500);
+        digitalWrite(STM_NOTIFICATION_LED_PIN, !STM_NOTIFICATION_LED_ON_STATE);
+        delay(500);
     }
+    digitalWrite(STM_NOTIFICATION_LED_PIN, STM_NOTIFICATION_LED_ON_STATE);
     vTaskDelete(NULL);
 }
+#endif
 
 void SailtrackModule::statusTask(void * pvArguments) {
-    char topic[50];
+    char topic[STM_MQTT_TOPIC_BUFFER_SIZE];
     sprintf(topic, "status/%s", name);
-
     TickType_t lastWakeTime = xTaskGetTickCount();
     while (true) {
-        if (callbacks) {
-            DynamicJsonDocument * payload = callbacks->getStatus();
-            if (payload) publish(topic, payload);
+        StaticJsonDocument<512> doc;
+        if (callbacks) callbacks->onStatusMessage(doc.to<JsonObject>());
+        JsonObject cpu = doc.createNestedObject("cpu");
+        cpu["temperature"] = temperatureRead();
+        JsonObject heap = doc.createNestedObject("heap");
+        heap["size"] = ESP.getHeapSize();
+        heap["free"] = ESP.getFreeHeap();
+        heap["maxAlloc"] = ESP.getMaxAllocHeap();
+        if (ESP.getPsramSize()) {
+            JsonObject psram = doc.createNestedObject("psram");
+            psram["size"] = ESP.getPsramSize();
+            psram["free"] = ESP.getFreePsram();
+            psram["maxAlloc"] = ESP.getMaxAllocPsram();
         }
-        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / MQTT_STATUS_PUBLISH_RATE_HZ));
+        publish(topic, doc.as<JsonObjectConst>());
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / STM_STATUS_TASK_RATE_HZ));
     }
 }
 
 void SailtrackModule::logTask(void * pvArguments) {
     TickType_t lastWakeTime = xTaskGetTickCount();
+    log_printf("\n");
     while (true) {
-        ESP_LOGI(LOG_TAG, "Published messages: %d, Received messages: %d", publishedMessagesCount, receivedMessagesCount);
-        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / MQTT_LOG_PUBLISH_RATE_HZ));
+        log_i("Published messages: %d, Received messages: %d", publishedMessagesCount, receivedMessagesCount);
+        if (callbacks) callbacks->onLogMessage();
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / STM_LOG_TASK_RATE_HZ));
     }
 }
 
@@ -231,30 +202,15 @@ void SailtrackModule::otaTask(void * pvArguments) {
     TickType_t lastWakeTime = xTaskGetTickCount();
     while (true) {
         ArduinoOTA.handle();
-        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / OTA_HANDLE_RATE_HZ));
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / STM_OTA_TASK_RATE_HZ));
     }
 }
 
-int SailtrackModule::m_vprintf(const char * format, va_list args) {
-    if (mqttConnected) {
-        char message[200];
-        char topic[50];
-        int messageSize;
-        sprintf(topic, "log/%s", name);
-        vsprintf(message, format, args);
-        for (messageSize = 0; message[messageSize]; messageSize++);
-        message[messageSize - 1] = 0;
-        DynamicJsonDocument payload(500);
-        payload["message"] = message;
-        publish(topic, &payload);
-    }
-    return vprintf(format, args);
-}
+// ----------------------------- Wrappers ----------------------------- //
 
-int SailtrackModule::publish(const char * topic, DynamicJsonDocument * payload) {
-    (*payload)["measurement"] = strrchr(strdup(topic), '/') + 1;
-    char output[MQTT_OUTPUT_BUFFER_SIZE];
-    serializeJson(*payload, output);
+int SailtrackModule::publish(const char * topic, JsonObjectConst payload) {
+    char output[STM_MQTT_DATA_BUFFER_SIZE];
+    serializeJson(payload, output);
     return esp_mqtt_client_publish(mqttClient, topic, output, 0, 1, 0);
 }
 

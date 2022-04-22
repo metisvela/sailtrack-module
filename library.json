@@ -16,7 +16,7 @@
     ],
     "license": "GPL-3.0",
     "dependencies": {
-        "bblanchon/ArduinoJson": "^6.19.3"
+        "bblanchon/ArduinoJson": "^6.19.4"
     },
     "frameworks": "arduino",
     "platforms": "espressif32",
@@ -25,5 +25,8 @@
             "test",
             ".github"
         ]
+    },
+    "build": {
+        "flags": "-D CORE_DEBUG_LEVEL=ARDUHAL_LOG_LEVEL_INFO"
     }
 }
