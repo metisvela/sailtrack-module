@@ -176,12 +176,10 @@ void SailtrackModule::statusTask(void * pvArguments) {
         JsonObject cpu = doc.createNestedObject("cpu");
         cpu["temperature"] = temperatureRead();
         JsonObject heap = doc.createNestedObject("heap");
-        heap["size"] = ESP.getHeapSize();
         heap["free"] = ESP.getFreeHeap();
         heap["maxAlloc"] = ESP.getMaxAllocHeap();
         if (ESP.getPsramSize()) {
             JsonObject psram = doc.createNestedObject("psram");
-            psram["size"] = ESP.getPsramSize();
             psram["free"] = ESP.getFreePsram();
             psram["maxAlloc"] = ESP.getMaxAllocPsram();
         }
