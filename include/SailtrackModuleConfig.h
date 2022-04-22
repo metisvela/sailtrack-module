@@ -5,9 +5,11 @@
 
 #define STM_MODULE_NAME_MAX_LENGTH      16
 
-// ------------------------ Log Configuration ------------------------ //
+// ------------------- JSON Documents Configuration ------------------- //
 
-#define STM_LOG_TAG                     "SAILTRACK_MODULE"
+#define STM_JSON_DOCUMENT_BIG_SIZE      1024
+#define STM_JSON_DOCUMENT_MEDIUM_SIZE   512
+#define STM_JSON_DOCUMENT_SMALL_SIZE    256
 
 // ------------------ Notification LED Configuration ------------------ //
 
@@ -66,12 +68,8 @@
 #ifndef STM_MQTT_PASSWORD
 #define STM_MQTT_PASSWORD               "dietpi"
 #endif
-#ifndef STM_MQTT_DATA_BUFFER_SIZE
-#define STM_MQTT_DATA_BUFFER_SIZE       MQTT_BUFFER_SIZE_BYTE
-#endif
-#ifndef STM_MQTT_TOPIC_BUFFER_SIZE
+#define STM_MQTT_DATA_BUFFER_SIZE       1024
 #define STM_MQTT_TOPIC_BUFFER_SIZE      32
-#endif
 
 #define STM_MQTT_CONNECTION_TIMEOUT_MS  STM_WIFI_CONNECTION_TIMEOUT_MS
 

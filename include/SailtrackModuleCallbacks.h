@@ -10,9 +10,9 @@ class SailtrackModuleCallbacks {
          * Called when a new MQTT message has been published to one of the subscribed topics.
          * 
          * @param topic The topic the message has been published to.
-         * @param message The received message.
+         * @param json The received JSON object.
          */
-        virtual void onMqttMessage(const char * topic, const char * message) {}
+        virtual void onMqttMessage(const char * topic, JsonObjectConst json) {}
 
         /**
          * Called when a new log entry is being sent through the serial port.

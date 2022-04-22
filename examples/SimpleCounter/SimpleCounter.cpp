@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <SailtrackModule.h>
 
+#define LOOP_TASK_RATE_HZ 1
+
 SailtrackModule stm;
 
 class ModuleCallbacks: public SailtrackModuleCallbacks {
@@ -13,7 +15,9 @@ class ModuleCallbacks: public SailtrackModuleCallbacks {
 		status["extra"] = "extraStatus";
 	}
 
-	void onMqttMessage(const char * topic, const char * message) {
+	void onMqttMessage(const char * topic, JsonObjectConst payload) {
+		char message[STM_MQTT_DATA_BUFFER_SIZE];
+		serializeJson(payload, message);
 		log_i("New message! Topic: %s, Message: %s", topic, message);
 	}
 };
@@ -26,8 +30,9 @@ void setup() {
 }
 
 void loop() {
-	StaticJsonDocument<128> doc;
+	TickType_t lastWakeTime = xTaskGetTickCount();
+	StaticJsonDocument<STM_JSON_DOCUMENT_SMALL_SIZE> doc;
 	doc["count"] = counter++;
 	stm.publish("sensor/counter0", doc.as<JsonObjectConst>());
-	delay(1000);
+	vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / LOOP_TASK_RATE_HZ));
 }

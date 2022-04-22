@@ -51,10 +51,10 @@ class SailtrackModule {
          * Publish data to MQTT. Use this method to publish a JSON formatted payload to the given MQTT topic.
          * 
          * @param topic The topic `payload` will be published to.
-         * @param payload The payload to publish formatted as a JSON document.
+         * @param json The JSON object to publish.
          * @return The ID of the published message on success, -1 on failure.
          */
-        static int publish(const char * topic, JsonObjectConst payload);
+        static int publish(const char * topic, JsonObjectConst json);
 
         /**
          * Subscribe to a MQTT topic. To notify new messages, the `onMqttMessage(...)` callback will be used.

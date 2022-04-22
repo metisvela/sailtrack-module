@@ -3,7 +3,7 @@
 // ------------------------- Static Variables ------------------------- //
 
 char SailtrackModule::name[STM_MODULE_NAME_MAX_LENGTH];
-char SailtrackModule::hostname[STM_MODULE_NAME_MAX_LENGTH+10];
+char SailtrackModule::hostname[2*STM_MODULE_NAME_MAX_LENGTH];
 
 SailtrackModuleCallbacks * SailtrackModule::callbacks;
 
@@ -52,6 +52,7 @@ void SailtrackModule::beginWifi(IPAddress ip) {
     if (WiFi.status() != WL_CONNECTED) {
         log_i("Impossible to connect to '%s'", STM_WIFI_SSID);
         log_i("Going to deep sleep, goodnight...");
+        log_printf("\n");
         ESP.deepSleep(STM_WIFI_SLEEP_DURATION_US);
     }
 
@@ -125,27 +126,28 @@ void SailtrackModule::beginMqtt() {
 void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base, int32_t eventId, void * eventData) {
     esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t)eventData;
     switch ((esp_mqtt_event_id_t)eventId) {
-        case MQTT_EVENT_CONNECTED:
+        case MQTT_EVENT_CONNECTED: {
             mqttConnected = true;
-            break;
-        case MQTT_EVENT_DATA:
+        } break;
+        case MQTT_EVENT_DATA: {
             char topic[STM_MQTT_TOPIC_BUFFER_SIZE];
             char message[STM_MQTT_DATA_BUFFER_SIZE];
             sprintf(topic, "%.*s", event->topic_len, event->topic);
             sprintf(message, "%.*s", event->data_len, event->data);
             receivedMessagesCount++;
-            if (callbacks) callbacks->onMqttMessage(topic, message);
-            break;
-        case MQTT_EVENT_DISCONNECTED:
+            StaticJsonDocument<STM_JSON_DOCUMENT_BIG_SIZE> doc;
+            deserializeJson(doc, message);
+            if (callbacks) callbacks->onMqttMessage(topic, doc.as<JsonObjectConst>());
+        } break;
+        case MQTT_EVENT_DISCONNECTED: {
             ESP_LOGE("Lost connection to 'mqtt://%s@%s:%d'...", STM_MQTT_USERNAME, STM_MQTT_HOST_ADDR, STM_MQTT_PORT);
             ESP_LOGE("Rebooting...");
             ESP.restart();
-            break;
-        case MQTT_EVENT_PUBLISHED:
+        } break;
+        case MQTT_EVENT_PUBLISHED: {
             publishedMessagesCount++;
-            break;
-        default:
-            break;
+        } break;
+        default: {} break;
     }
 }
 
@@ -169,7 +171,7 @@ void SailtrackModule::statusTask(void * pvArguments) {
     sprintf(topic, "status/%s", name);
     TickType_t lastWakeTime = xTaskGetTickCount();
     while (true) {
-        StaticJsonDocument<512> doc;
+        StaticJsonDocument<STM_JSON_DOCUMENT_SMALL_SIZE> doc;
         if (callbacks) callbacks->onStatusMessage(doc.to<JsonObject>());
         JsonObject cpu = doc.createNestedObject("cpu");
         cpu["temperature"] = temperatureRead();
@@ -208,9 +210,9 @@ void SailtrackModule::otaTask(void * pvArguments) {
 
 // ----------------------------- Wrappers ----------------------------- //
 
-int SailtrackModule::publish(const char * topic, JsonObjectConst payload) {
+int SailtrackModule::publish(const char * topic, JsonObjectConst json) {
     char output[STM_MQTT_DATA_BUFFER_SIZE];
-    serializeJson(payload, output);
+    serializeJson(json, output);
     return esp_mqtt_client_publish(mqttClient, topic, output, 0, 1, 0);
 }
 
