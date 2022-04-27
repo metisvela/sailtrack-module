@@ -19,8 +19,8 @@ class SailtrackModule {
     static SailtrackModuleCallbacks * callbacks;
     static esp_mqtt_client_handle_t mqttClient;
     static bool mqttConnected;
-    static int publishedMessagesCount;
-    static int receivedMessagesCount;
+    static unsigned int publishedMessagesCount;
+    static unsigned int receivedMessagesCount;
 
     #ifdef STM_NOTIFICATION_LED_PIN
     static void beginNotificationLed();
