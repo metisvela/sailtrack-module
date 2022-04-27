@@ -1,7 +1,13 @@
 #include <Arduino.h>
 #include <SailtrackModule.h>
 
-#define LOOP_TASK_RATE_HZ 1
+// -------------------------- Configuration -------------------------- //
+
+#define MQTT_PUBLISH_FREQ_HZ	1
+
+#define LOOP_TASK_DELAY_MS 		1000 / MQTT_PUBLISH_FREQ_HZ
+
+// ------------------------------------------------------------------- //
 
 SailtrackModule stm;
 
@@ -34,5 +40,5 @@ void loop() {
 	StaticJsonDocument<STM_JSON_DOCUMENT_SMALL_SIZE> doc;
 	doc["count"] = counter++;
 	stm.publish("sensor/counter0", doc.as<JsonObjectConst>());
-	vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / LOOP_TASK_RATE_HZ));
+	vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(LOOP_TASK_DELAY_MS));
 }

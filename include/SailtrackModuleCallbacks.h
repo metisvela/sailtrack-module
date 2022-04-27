@@ -17,15 +17,15 @@ class SailtrackModuleCallbacks {
         /**
          * Called when a new log entry is being sent through the serial port.
          */
-        virtual void onLogMessage() {}
+        virtual void onLogPrint() {}
 
         /**
-         * Called when a new status message is being sent through MQTT.
+         * Called when a new status message is being published through MQTT.
          * 
          * @param status The JsonObject with the status of the module, you can modify it to include extra status
          *      information of the module.
          */
-        virtual void onStatusMessage(JsonObject status) {}
+        virtual void onStatusPublish(JsonObject status) {}
 };
 
 #endif

@@ -13,8 +13,14 @@
 
 // ------------------ Notification LED Configuration ------------------ //
 
-#if !defined(STM_NOTIFICATION_LED_PIN) && defined(LED_BUILTIN)
+#ifndef STM_NOTIFICATION_LED_PIN
+#ifdef LED_BUILTIN
 #define STM_NOTIFICATION_LED_PIN        LED_BUILTIN
+#else
+#ifdef BUILTIN_LED
+#define STM_NOTIFICATION_LED_PIN        BUILTIN_LED
+#endif
+#endif
 #endif
 #ifndef STM_NOTIFICATION_LED_ON_STATE
 #define STM_NOTIFICATION_LED_ON_STATE   HIGH
@@ -32,9 +38,13 @@
 
 // ------------------- Library Tasks Configuration ------------------- //
 
-#define STM_STATUS_TASK_RATE_HZ         0.1
-#define STM_LOG_TASK_RATE_HZ            0.1
-#define STM_OTA_TASK_RATE_HZ            1
+#define STM_STATUS_PUBLISH_FREQ_HZ      0.1
+#define STM_LOG_PRINT_FREQ_HZ           0.1
+#define STM_OTA_HANDLE_FREQ_HZ          1
+
+#define STM_STATUS_TASK_DELAY_MS        1000 / STM_STATUS_PUBLISH_FREQ_HZ
+#define STM_LOG_TASK_DELAY_MS           1000 / STM_LOG_PRINT_FREQ_HZ
+#define STM_OTA_TASK_DELAY_MS           1000 / STM_OTA_HANDLE_FREQ_HZ
 
 // ------------------------ WiFi Configuration ------------------------ //
 

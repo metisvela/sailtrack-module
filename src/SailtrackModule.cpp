@@ -172,7 +172,7 @@ void SailtrackModule::statusTask(void * pvArguments) {
     TickType_t lastWakeTime = xTaskGetTickCount();
     while (true) {
         StaticJsonDocument<STM_JSON_DOCUMENT_SMALL_SIZE> doc;
-        if (callbacks) callbacks->onStatusMessage(doc.to<JsonObject>());
+        if (callbacks) callbacks->onStatusPublish(doc.to<JsonObject>());
         JsonObject cpu = doc.createNestedObject("cpu");
         cpu["temperature"] = temperatureRead();
         JsonObject heap = doc.createNestedObject("heap");
@@ -184,7 +184,7 @@ void SailtrackModule::statusTask(void * pvArguments) {
             psram["maxAlloc"] = ESP.getMaxAllocPsram();
         }
         publish(topic, doc.as<JsonObjectConst>());
-        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / STM_STATUS_TASK_RATE_HZ));
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(STM_STATUS_TASK_DELAY_MS));
     }
 }
 
@@ -193,8 +193,8 @@ void SailtrackModule::logTask(void * pvArguments) {
     log_printf("\n");
     while (true) {
         log_i("Published messages: %d, Received messages: %d", publishedMessagesCount, receivedMessagesCount);
-        if (callbacks) callbacks->onLogMessage();
-        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / STM_LOG_TASK_RATE_HZ));
+        if (callbacks) callbacks->onLogPrint();
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(STM_LOG_TASK_DELAY_MS));
     }
 }
 
@@ -202,7 +202,7 @@ void SailtrackModule::otaTask(void * pvArguments) {
     TickType_t lastWakeTime = xTaskGetTickCount();
     while (true) {
         ArduinoOTA.handle();
-        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(1000 / STM_OTA_TASK_RATE_HZ));
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(STM_OTA_TASK_DELAY_MS));
     }
 }
 
