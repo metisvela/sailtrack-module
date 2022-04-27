@@ -9,8 +9,8 @@ SailtrackModuleCallbacks * SailtrackModule::callbacks;
 
 esp_mqtt_client_handle_t SailtrackModule::mqttClient;
 bool SailtrackModule::mqttConnected;
-int SailtrackModule::publishedMessagesCount;
-int SailtrackModule::receivedMessagesCount;
+unsigned int SailtrackModule::publishedMessagesCount;
+unsigned int SailtrackModule::receivedMessagesCount;
 
 // -------------------------- Begin Methods -------------------------- //
 
