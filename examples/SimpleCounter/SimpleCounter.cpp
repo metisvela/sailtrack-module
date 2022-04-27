@@ -1,39 +1,44 @@
-#define USE_ESP_IDF_LOG
-
 #include <Arduino.h>
 #include <SailtrackModule.h>
 
+// -------------------------- Configuration -------------------------- //
+
+#define MQTT_PUBLISH_FREQ_HZ	1
+
+#define LOOP_TASK_DELAY_MS 		1000 / MQTT_PUBLISH_FREQ_HZ
+
+// ------------------------------------------------------------------- //
+
 SailtrackModule stm;
 
-static const char * LOG_TAG = "SAILTRACK_COUNTER";
+class ModuleCallbacks: public SailtrackModuleCallbacks {
+	void onLogMessage() {
+		log_i("Extra log entry");
+		log_printf("\n");
+	}
 
-class TestCallbacks: public SailtrackModuleCallbacks {
-	void onDeepSleepEnter() {}
-	void onWifiConnectionBegin() {}
-	void onWifiConnectionResult(wl_status_t status) {}
-	void onWifiDisconnected() {}
-	void onMqttConnectionBegin() {}
-	void onMqttConnectionResult(bool connected) {}
-	void onMqttDisconnected() {}
+	void onStatusMessage(JsonObject status) {
+		status["extra"] = "extraStatus";
+	}
 
-	DynamicJsonDocument * getStatus() { return NULL; }
-
-	void onMqttMessage(const char * topic, const char * message) {
-		ESP_LOGI(LOG_TAG, "New message! Topic: %s, Message: %s", topic, message);
+	void onMqttMessage(const char * topic, JsonObjectConst payload) {
+		char message[STM_MQTT_DATA_BUFFER_SIZE];
+		serializeJson(payload, message);
+		log_i("New message! Topic: %s, Message: %s", topic, message);
 	}
 };
 
 int counter = 0;
 
 void setup() {
-	stm.begin("counter", IPAddress(192, 168, 42, 100), new TestCallbacks());
+	stm.begin("counter", IPAddress(192, 168, 42, 100), new ModuleCallbacks());
 	stm.subscribe("sensor/counter0");
-	esp_log_level_set(LOG_TAG, ESP_LOG_INFO);
 }
 
 void loop() {
-	DynamicJsonDocument data(100);
-	data["count"] = counter++;
-	stm.publish("sensor/counter0", &data);
-	delay(1000);
+	TickType_t lastWakeTime = xTaskGetTickCount();
+	StaticJsonDocument<STM_JSON_DOCUMENT_SMALL_SIZE> doc;
+	doc["count"] = counter++;
+	stm.publish("sensor/counter0", doc.as<JsonObjectConst>());
+	vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(LOOP_TASK_DELAY_MS));
 }

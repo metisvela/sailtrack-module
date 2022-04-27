@@ -6,65 +6,26 @@
  */ 
 class SailtrackModuleCallbacks {
     public:
-
         /**
-         * Called when the module is entering deep sleep mode. Use this callback to power off peripherals so to save 
-         * power during deep sleep.
-         */
-        virtual void onDeepSleepEnter() {}
-
-        /**
-         * Called when the connection to the WiFi network begins.
-         */ 
-        virtual void onWifiConnectionBegin() {}
-
-        /**
-         * Called when the connection to the WiFi network ends, either successfully or not.
-         * 
-         * @param status The resulted status of the connection.
-         */
-        virtual void onWifiConnectionResult(wl_status_t status) {}
-
-        /**
-         * Called when the connection to the WiFi network is lost. Note that once the callback returns the ESP is 
-         * rebooted, therefore remember not to start any non-blocking task from this callback, as it will be killed 
-         * immediately.
-         */
-        virtual void onWifiDisconnected() {}
-
-        /**
-         * Called when the connection to the MQTT broker begins.
-         */ 
-        virtual void onMqttConnectionBegin() {}
-
-        /**
-         * Called when the connection to the MQTT broker ends, either successfully or not.
-         * 
-         * @param connected The resulted status of the connection.
-         */ 
-        virtual void onMqttConnectionResult(bool connected) {}
-
-        /**
-         * Called when the connection to the MQTT broker is lost. Note that once the callback returns the ESP is
-         * rebooted, therefore remember not to start any non-blocking task from this callback, as it will be killed
-         * immediately.
-         */
-        virtual void onMqttDisconnected() {}
-
-        /**
-         * Called when a new MQTT message is published to one of the subscribed topics.
+         * Called when a new MQTT message has been published to one of the subscribed topics.
          * 
          * @param topic The topic the message has been published to.
-         * @param message The received message.
+         * @param message The received message as a JSON object.
          */
-        virtual void onMqttMessage(const char * topic, const char * message) {}
+        virtual void onMqttMessage(const char * topic, JsonObjectConst message) {}
 
         /**
-         * Called when the library needs the status of the module (e.g. to publish it to MQTT).
-         * 
-         * @return The status of the module, as a JSON document.
+         * Called when a new log entry is being sent through the serial port.
          */
-        virtual DynamicJsonDocument * getStatus() { return NULL; }
+        virtual void onLogPrint() {}
+
+        /**
+         * Called when a new status message is being published through MQTT.
+         * 
+         * @param status The JsonObject with the status of the module, you can modify it to include extra status
+         *      information of the module.
+         */
+        virtual void onStatusPublish(JsonObject status) {}
 };
 
 #endif
