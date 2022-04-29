@@ -70,7 +70,7 @@
 #define STM_MQTT_HOST_ADDR              STM_WIFI_GATEWAY_ADDR
 #endif
 #ifndef STM_MQTT_PORT
-#define STM_MQTT_PORT                   MQTT_TCP_DEFAULT_PORT
+#define STM_MQTT_PORT                   1883
 #endif
 #ifndef STM_MQTT_USERNAME
 #define STM_MQTT_USERNAME               "mosquitto"

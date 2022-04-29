@@ -58,11 +58,11 @@ void SailtrackModule::beginWifi(IPAddress ip) {
 
     log_i("Successfully connected to '%s'!", STM_WIFI_SSID);
 
-    WiFi.onEvent([](WiFiEvent_t event) {
-        ESP_LOGE("Lost connection to '%s'", STM_WIFI_SSID);
-        ESP_LOGE("Rebooting...");
+    WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
+        log_e("Lost connection to '%s'", STM_WIFI_SSID);
+        log_e("Rebooting...");
         ESP.restart();
-    }, SYSTEM_EVENT_STA_DISCONNECTED);
+    }, arduino_event_id_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 }
 
 void SailtrackModule::beginOTA() {
@@ -76,7 +76,7 @@ void SailtrackModule::beginOTA() {
             log_i("Update successfully completed!");
         })
         .onProgress([](unsigned int progress, unsigned int total) {
-            ESP_LOGV("Progress: %u", (progress / (total / 100)));
+            log_v("Progress: %u", (progress / (total / 100)));
         })
         .onError([](ota_error_t error) {
             if (error == OTA_AUTH_ERROR) log_e("Error[%u]: Auth Failed", error);
@@ -107,8 +107,8 @@ void SailtrackModule::beginMqtt() {
         delay(500);
 
     if (!mqttConnected) {
-        ESP_LOGE("Impossible to connect to 'mqtt://%s@%s:%d'", STM_MQTT_USERNAME, STM_MQTT_HOST_ADDR, STM_MQTT_PORT);
-        ESP_LOGE("Rebooting...");
+        log_e("Impossible to connect to 'mqtt://%s@%s:%d'", STM_MQTT_USERNAME, STM_MQTT_HOST_ADDR, STM_MQTT_PORT);
+        log_e("Rebooting...");
         ESP.restart();
     }
 
@@ -140,8 +140,8 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
             if (callbacks) callbacks->onMqttMessage(topic, doc.as<JsonObjectConst>());
         } break;
         case MQTT_EVENT_DISCONNECTED: {
-            ESP_LOGE("Lost connection to 'mqtt://%s@%s:%d'...", STM_MQTT_USERNAME, STM_MQTT_HOST_ADDR, STM_MQTT_PORT);
-            ESP_LOGE("Rebooting...");
+            log_e("Lost connection to 'mqtt://%s@%s:%d'...", STM_MQTT_USERNAME, STM_MQTT_HOST_ADDR, STM_MQTT_PORT);
+            log_e("Rebooting...");
             ESP.restart();
         } break;
         case MQTT_EVENT_PUBLISHED: {
