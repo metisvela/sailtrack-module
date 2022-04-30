@@ -42,9 +42,9 @@
 #define STM_LOG_PRINT_FREQ_HZ           0.1
 #define STM_OTA_HANDLE_FREQ_HZ          1
 
-#define STM_STATUS_TASK_DELAY_MS        1000 / STM_STATUS_PUBLISH_FREQ_HZ
-#define STM_LOG_TASK_DELAY_MS           1000 / STM_LOG_PRINT_FREQ_HZ
-#define STM_OTA_TASK_DELAY_MS           1000 / STM_OTA_HANDLE_FREQ_HZ
+#define STM_STATUS_TASK_INTERVAL_MS     1000 / STM_STATUS_PUBLISH_FREQ_HZ
+#define STM_LOG_TASK_INTERVAL_MS        1000 / STM_LOG_PRINT_FREQ_HZ
+#define STM_OTA_TASK_INTERVAL_MS        1000 / STM_OTA_HANDLE_FREQ_HZ
 
 // ------------------------ WiFi Configuration ------------------------ //
 
