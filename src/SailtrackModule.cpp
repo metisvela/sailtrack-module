@@ -176,15 +176,15 @@ void SailtrackModule::statusTask(void * pvArguments) {
         JsonObject cpu = doc.createNestedObject("cpu");
         cpu["temperature"] = temperatureRead();
         JsonObject heap = doc.createNestedObject("heap");
-        heap["free"] = ESP.getFreeHeap();
+        heap["load"] = ESP.getFreeHeap() / ESP.getHeapSize();
         heap["maxAlloc"] = ESP.getMaxAllocHeap();
         if (ESP.getPsramSize()) {
             JsonObject psram = doc.createNestedObject("psram");
-            psram["free"] = ESP.getFreePsram();
+            psram["load"] = ESP.getFreePsram() / ESP.getPsramSize();
             psram["maxAlloc"] = ESP.getMaxAllocPsram();
         }
         publish(topic, doc.as<JsonObjectConst>());
-        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(STM_STATUS_TASK_DELAY_MS));
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(STM_STATUS_TASK_INTERVAL_MS));
     }
 }
 
@@ -194,7 +194,7 @@ void SailtrackModule::logTask(void * pvArguments) {
     while (true) {
         log_i("Published messages: %d, Received messages: %d", publishedMessagesCount, receivedMessagesCount);
         if (callbacks) callbacks->onLogPrint();
-        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(STM_LOG_TASK_DELAY_MS));
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(STM_LOG_TASK_INTERVAL_MS));
     }
 }
 
@@ -202,7 +202,7 @@ void SailtrackModule::otaTask(void * pvArguments) {
     TickType_t lastWakeTime = xTaskGetTickCount();
     while (true) {
         ArduinoOTA.handle();
-        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(STM_OTA_TASK_DELAY_MS));
+        vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(STM_OTA_TASK_INTERVAL_MS));
     }
 }
 
