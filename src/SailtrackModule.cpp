@@ -42,24 +42,24 @@ void SailtrackModule::beginWifi(IPAddress ip) {
     WiFi.mode(WIFI_STA);
     WiFi.setHostname(hostname);
     WiFi.config(ip, IPAddress().fromString(STM_WIFI_GATEWAY_ADDR), IPAddress().fromString(STM_WIFI_SUBNET));
-    WiFi.begin(STM_WIFI_SSID, STM_WIFI_PASSWORD);
+    WiFi.begin(STM_WIFI_AP_SSID, STM_WIFI_AP_PASSWORD);
     
-    log_i("Connecting to '%s'...", STM_WIFI_SSID);
+    log_i("Connecting to '%s'...", STM_WIFI_AP_SSID);
 
     for (int i = 0; WiFi.status() != WL_CONNECTED && i < STM_WIFI_CONNECTION_TIMEOUT_MS / 500 ; i++)
         delay(500);
 
     if (WiFi.status() != WL_CONNECTED) {
-        log_i("Impossible to connect to '%s'", STM_WIFI_SSID);
+        log_i("Impossible to connect to '%s'", STM_WIFI_AP_SSID);
         log_i("Going to deep sleep, goodnight...");
         log_printf("\n");
         ESP.deepSleep(STM_WIFI_SLEEP_DURATION_US);
     }
 
-    log_i("Successfully connected to '%s'!", STM_WIFI_SSID);
+    log_i("Successfully connected to '%s'!", STM_WIFI_AP_SSID);
 
     WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
-        log_e("Lost connection to '%s'", STM_WIFI_SSID);
+        log_e("Lost connection to '%s'", STM_WIFI_AP_SSID);
         log_e("Rebooting...");
         ESP.restart();
     }, arduino_event_id_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
