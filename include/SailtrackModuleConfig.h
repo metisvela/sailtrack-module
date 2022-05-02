@@ -48,11 +48,11 @@
 
 // ------------------------ WiFi Configuration ------------------------ //
 
-#ifndef STM_WIFI_SSID
-#define STM_WIFI_SSID                   "SailTrack-Net"
+#ifndef STM_WIFI_AP_SSID
+#define STM_WIFI_AP_SSID                "SailTrack-CoreNet"
 #endif
-#ifndef STM_WIFI_PASSWORD
-#define STM_WIFI_PASSWORD               "sailtracknet"
+#ifndef STM_WIFI_AP_PASSWORD
+#define STM_WIFI_AP_PASSWORD            "sailtracknet"
 #endif
 #ifndef STM_WIFI_GATEWAY_ADDR
 #define STM_WIFI_GATEWAY_ADDR           "192.168.42.1"

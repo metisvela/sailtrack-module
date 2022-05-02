@@ -1,4 +1,4 @@
-name: Publish GitHub Release
+name: Publish Release
 
 on:
   push:
@@ -6,7 +6,18 @@ on:
       - 'v*.*.*'
 
 jobs:
-  publish:
+  publish_github:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          
+  publish_platformio:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -19,7 +30,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-
+            
       - name: Cache PlatformIO
         uses: actions/cache@v3
         with:
@@ -35,10 +46,6 @@ jobs:
           pip install --upgrade platformio
           
       - name: Run PlatformIO
-        run: pio package pack
-
-      - name: Publish release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: SailtrackModule-*.*.*.tar.gz
-          generate_release_notes: true
+        run: pio package publish --non-interactive --owner metisvela
+        env:
+          PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
