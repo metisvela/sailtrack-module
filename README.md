@@ -45,39 +45,39 @@ A bare minimum example of the library can be found below. For further informatio
 SailtrackModule stm;
 
 class ModuleCallbacks: public SailtrackModuleCallbacks {
-	void onLogMessage() {
-		// Called when a new log message is being displayed to the serial console.
-    // Add here any extra log information.
-	}
+    void onLogMessage() {
+        // Called when a new log message is being displayed to the serial console.
+        // Add here any extra log information.
+    }
 
-	void onStatusMessage(JsonObject status) {
-		// Called when a new status message is being published to the MQTT network.
-    // Add here any extra status information (e.g. battery voltage) by adding it to the `status` object.
-	}
+    void onStatusMessage(JsonObject status) {
+        // Called when a new status message is being published to the MQTT network.
+        // Add here any extra status information (e.g. battery voltage) by adding it to the `status` object.
+    }
 
-	void onMqttMessage(const char * topic, JsonObjectConst payload) {
-    // Called when a message is being published to any of the subscribed MQTT topics.
-    // In this example, this method is called every time a new message is being published under the 
-    // `sensor/example2` topic.
-    // Handle here received messages from the network by reading the `payload` object and the `topic` string.
-	}
+    void onMqttMessage(const char * topic, JsonObjectConst payload) {
+        // Called when a message is being published to any of the subscribed MQTT topics.
+        // In this example, this method is called every time a new message is being published under the 
+        // `sensor/example2` topic.
+        // Handle here received messages from the network by reading the `payload` object and the `topic` string.
+    }
 };
 
 void setup() {
-  // Initialize the module. This method must be always called.
-  stm.begin("example", IPAddress(192, 168, 1, 100), new ModuleCallbacks());
-  // Subscribe to the `sensor/example2` topic. This means that the `onMqttMessage(...)` method above will be 
-  // called every time a new message is being published under `sensor/example2`.
-  stm.subscribe("sensor/example2");
+    // Initialize the module. This method must be always called.
+    stm.begin("example", IPAddress(192, 168, 1, 100), new ModuleCallbacks());
+    // Subscribe to the `sensor/example2` topic. This means that the `onMqttMessage(...)` method above will be 
+    // called every time a new message is being published under `sensor/example2`.
+    stm.subscribe("sensor/example2");
 }
 
 void loop() {
-  // Publish the "Hello, World!" message under the `sensor/example` topic every second by creating the JSON 
-  // object containing the message and using the `publish(...)` method.
-  StaticJsonDocument<STM_JSON_DOCUMENT_SMALL_SIZE> doc;
-	doc["example"] = "Hello, World!";
-	stm.publish("sensor/example", doc.as<JsonObjectConst>());
-  delay(1000);
+    // Publish the "Hello, World!" message under the `sensor/example` topic every second by creating the JSON 
+    // object containing the message and using the `publish(...)` method.
+    StaticJsonDocument<STM_JSON_DOCUMENT_SMALL_SIZE> doc;
+    doc["example"] = "Hello, World!";
+    stm.publish("sensor/example", doc.as<JsonObjectConst>());
+    delay(1000);
 }
 ```
 
