@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/metis-vela-unipd/sailtrack-docs/main/Assets/SailTrack%20Logo.png" width="180">
+  <img src="https://raw.githubusercontent.com/metis-vela-unipd/sailtrack-docs/main/Assets/SailTrack%20Logo.svg" width="180">
 </p>
 
 <p align="center">
@@ -79,6 +79,32 @@ void loop() {
     stm.publish("sensor/example", doc.as<JsonObjectConst>());
     delay(1000);
 }
+```
+
+## Configuration
+
+It is possible to change some settings of the library by overriding one or more of the following internal defines:
+ - `STM_NOTIFICATION_LED_PIN` (integer): The pin to which the notification LED is connected. Defaults to the board's builtin LED pin, if present.
+ - `STM_NOTIFICATION_LED_ON_STATE` (`LOW` or `HIGH`): The logic state that corresponds to the ON state of the notification LED. Deafults to `HIGH` (=1).
+ - `STM_WIFI_AP_SSID` (string): The name of the WiFi network to which the module will try to connect at startup. Defaults to "SailTrack-CoreNet" (the SSID of the WiFi network created by SailTrack Core).
+ - `STM_WIFI_AP_PASSWORD` (string): The password of the WiFi network to which the module will try to connect at startup. Defaults to "sailtracknet" (the deafult password of the WiFi network created by SailTrack Core).
+ - `STM_WIFI_GATEWAY_ADDR` (string): The IP address of the gateway (i.e. the router) to which the module will try to connect at startup. Defaults to "192.168.42.1" (the default IP address of SailTrack Core).
+ - `STM_WIFI_SUBNET` (string): The subnet mask of the network to which the module will try to connect at startup. Defaults to "255.255.255.0" (the default subnet mask of the network created by SailTrack Core).
+ - `STM_MQTT_HOST_ADDR` (string): The IP address of the host running the MQTT broker to which the module will try to connect at startup. Defaults to "192.168.42.1" (the default IP address of SailTrack Core, that is also running the MQTT broker).
+ - `STM_MQTT_PORT` (integer): The MQTT port number to which the module will try to connect at startup. Defaults to 1883 (the default MQTT port).
+ - `STM_MQTT_USERNAME` (string): The username used to authenticate to the MQTT broker. Defaults to "mosquitto" (the default broker's username).
+ - `STM_MQTT_PASSWORD` (string): The password used to authenticate to the MQTT broker. Defaults to "sailtrack" (the default broker's password).
+ 
+To confifure the library, you can add the overridden defines in the `platformio.ini` file, under the `build_flags` section, as in the following example:
+```ini
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+lib_deps = metisvela/SailtrackModule@^1.7.1
+build_flags = 
+  -D STM_WIFI_AP_SSID="My-WiFi"
+  -D STM_WIFI_AP_PASSWORD="My-Password"
 ```
 
 ## Contributing
