@@ -111,6 +111,23 @@ build_flags =
 
 Pull requests are welcome. For major changes, please [open an issue](https://github.com/metis-vela-unipd/sailtrack-core/issues/new) first to discuss what you would like to change.
 
+If you are a contributor and you don't have access to SailTrack Core, you can use this procedure to emulate it:
+ 1. [Install Docker](https://docs.docker.com/get-docker/).
+ 2. Run the following command:
+ ```
+ docker run -it -p 1883:1883 eclipse-mosquitto:<version> mosquitto -c /mosquitto-no-auth.conf
+ ```
+ 3. Add the following `build_flags` to your `platformio.ini` file, properly setting the options:
+ ```ini
+build_flags = 
+  -D STM_WIFI_AP_SSID="<your-wifi-name>"
+  -D STM_WIFI_AP_PASSWORD="<your-wifi-password>"
+  -D STM_WIFI_GATEWAY_ADDR="<your-router-ip>"
+  -D STM_MQTT_HOST_ADDR="<your-pc-ip>"
+ ```
+ 
+ You can then check the MQTT traffic using an application like [MQTT Explorer](http://mqtt-explorer.com).
+
 ## License
 
 Copyright © 2022, [Métis Vela Unipd](https://github.com/metis-vela-unipd). SailTrack Core is available under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.en.html). See the LICENSE file for more info. 
