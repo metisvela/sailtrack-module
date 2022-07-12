@@ -125,6 +125,7 @@ build_flags =
   -D STM_WIFI_GATEWAY_ADDR="<your-router-ip>"
   -D STM_MQTT_HOST_ADDR="<your-pc-ip>"
  ```
+ 4. Set the module IP in the `begin(...)` method according to your network.
  
  You can then check the MQTT traffic using an application like [MQTT Explorer](http://mqtt-explorer.com).
 
