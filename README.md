@@ -95,7 +95,7 @@ It is possible to change some settings of the library by overriding one or more 
  - `STM_MQTT_USERNAME` (string): The username used to authenticate to the MQTT broker. Defaults to "mosquitto" (the default broker's username).
  - `STM_MQTT_PASSWORD` (string): The password used to authenticate to the MQTT broker. Defaults to "sailtrack" (the default broker's password).
  
-To confifure the library, you can add the overridden defines in the `platformio.ini` file, under the `build_flags` section, as in the following example:
+To confifure the library, you can add the overridden defines in the `platformio.ini` file, under the `build_flags` section, as in the following example (double quotes must be escaped):
 ```ini
 [env:esp32dev]
 platform = espressif32
@@ -103,8 +103,8 @@ board = esp32dev
 framework = arduino
 lib_deps = metisvela/SailtrackModule@^1.7.1
 build_flags = 
-  -D STM_WIFI_AP_SSID="My-WiFi"
-  -D STM_WIFI_AP_PASSWORD="My-Password"
+  -D STM_WIFI_AP_SSID=\"My-WiFi\"
+  -D STM_WIFI_AP_PASSWORD=\"My-Password\"
 ```
 
 ## Contributing
@@ -120,14 +120,13 @@ If you are a contributor and you don't have access to SailTrack Core, you can us
  3. Add the following `build_flags` to your `platformio.ini` file, properly setting the options:
  ```ini
 build_flags = 
-  -D STM_WIFI_AP_SSID="<your-wifi-name>"
-  -D STM_WIFI_AP_PASSWORD="<your-wifi-password>"
-  -D STM_WIFI_GATEWAY_ADDR="<your-router-ip>"
-  -D STM_MQTT_HOST_ADDR="<your-pc-ip>"
+  -D STM_WIFI_AP_SSID=\"<your-wifi-name>\"
+  -D STM_WIFI_AP_PASSWORD=\"<your-wifi-password>\"
+  -D STM_WIFI_GATEWAY_ADDR=\"<your-router-ip>\"
+  -D STM_MQTT_HOST_ADDR=\"<your-pc-ip>\"
  ```
  4. Set the module IP in the `begin(...)` method according to your network.
- 
- You can then check the MQTT traffic using an application like [MQTT Explorer](http://mqtt-explorer.com).
+ 5. Check the MQTT traffic using an application like [MQTT Explorer](http://mqtt-explorer.com).
 
 ## License
 
