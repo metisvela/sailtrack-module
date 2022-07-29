@@ -76,7 +76,7 @@
 #define STM_MQTT_USERNAME               "mosquitto"
 #endif
 #ifndef STM_MQTT_PASSWORD
-#define STM_MQTT_PASSWORD               "dietpi"
+#define STM_MQTT_PASSWORD               "sailtrack"
 #endif
 #define STM_MQTT_DATA_BUFFER_SIZE       1024
 #define STM_MQTT_TOPIC_BUFFER_SIZE      32
