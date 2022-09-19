@@ -176,11 +176,11 @@ void SailtrackModule::statusTask(void * pvArguments) {
         JsonObject cpu = doc.createNestedObject("cpu");
         cpu["temperature"] = temperatureRead();
         JsonObject heap = doc.createNestedObject("heap");
-        heap["load"] = (float) ESP.getFreeHeap() / (float) ESP.getHeapSize();
+        heap["load"] = 1 - (float) ESP.getFreeHeap() / (float) ESP.getHeapSize();
         heap["maxAlloc"] = ESP.getMaxAllocHeap();
         if (ESP.getPsramSize()) {
             JsonObject psram = doc.createNestedObject("psram");
-            psram["load"] = (float) ESP.getFreePsram() / (float) ESP.getPsramSize();
+            psram["load"] = 1 - (float) ESP.getFreePsram() / (float) ESP.getPsramSize();
             psram["maxAlloc"] = ESP.getMaxAllocPsram();
         }
         publish(topic, doc.as<JsonObjectConst>());
