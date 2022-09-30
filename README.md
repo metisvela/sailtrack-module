@@ -84,16 +84,16 @@ void loop() {
 ## Configuration
 
 It is possible to change some settings of the library by overriding one or more of the following internal defines:
- - `STM_NOTIFICATION_LED_PIN` (integer): The pin to which the notification LED is connected. Defaults to the board's builtin LED pin, if present
- - `STM_NOTIFICATION_LED_ON_STATE` (`LOW` or `HIGH`): The logic state that corresponds to the ON state of the notification LED. Deafults to `HIGH` (=1)
- - `STM_WIFI_AP_SSID` (string): The name of the WiFi network to which the module will try to connect at startup. Defaults to "SailTrack-CoreNet" (the SSID of the WiFi network created by SailTrack Core)
- - `STM_WIFI_AP_PASSWORD` (string): The password of the WiFi network to which the module will try to connect at startup. Defaults to "sailtracknet" (the deafult password of the WiFi network created by SailTrack Core)
- - `STM_WIFI_GATEWAY_ADDR` (string): The IP address of the gateway (i.e. the router) to which the module will try to connect at startup. Defaults to "192.168.42.1" (the default IP address of SailTrack Core)
- - `STM_WIFI_SUBNET` (string): The subnet mask of the network to which the module will try to connect at startup. Defaults to "255.255.255.0" (the default subnet mask of the network created by SailTrack Core)
- - `STM_MQTT_HOST_ADDR` (string): The IP address of the host running the MQTT broker to which the module will try to connect at startup. Defaults to "192.168.42.1" (the default IP address of SailTrack Core, that is also running the MQTT broker)
- - `STM_MQTT_PORT` (integer): The MQTT port number to which the module will try to connect at startup. Defaults to 1883 (the default MQTT port)
- - `STM_MQTT_USERNAME` (string): The username used to authenticate to the MQTT broker. Defaults to "mosquitto" (the default broker's username)
- - `STM_MQTT_PASSWORD` (string): The password used to authenticate to the MQTT broker. Defaults to "sailtrack" (the default broker's password)
+ - `STM_NOTIFICATION_LED_PIN` (integer): The pin to which the notification LED is connected. Defaults to the board's builtin LED pin, if present.
+ - `STM_NOTIFICATION_LED_ON_STATE` (`LOW` or `HIGH`): The logic state that corresponds to the ON state of the notification LED. Deafults to `HIGH` (=1).
+ - `STM_WIFI_AP_SSID` (string): The name of the WiFi network to which the module will try to connect at startup. Defaults to "SailTrack-CoreNet" (the SSID of the WiFi network created by SailTrack Core).
+ - `STM_WIFI_AP_PASSWORD` (string): The password of the WiFi network to which the module will try to connect at startup. Defaults to "sailtracknet" (the deafult password of the WiFi network created by SailTrack Core).
+ - `STM_WIFI_GATEWAY_ADDR` (string): The IP address of the gateway (i.e. the router) to which the module will try to connect at startup. Defaults to "192.168.42.1" (the default IP address of SailTrack Core).
+ - `STM_WIFI_SUBNET` (string): The subnet mask of the network to which the module will try to connect at startup. Defaults to "255.255.255.0" (the default subnet mask of the network created by SailTrack Core).
+ - `STM_MQTT_HOST_ADDR` (string): The IP address of the host running the MQTT broker to which the module will try to connect at startup. Defaults to "192.168.42.1" (the default IP address of SailTrack Core, that is also running the MQTT broker).
+ - `STM_MQTT_PORT` (integer): The MQTT port number to which the module will try to connect at startup. Defaults to 1883 (the default MQTT port).
+ - `STM_MQTT_USERNAME` (string): The username used to authenticate to the MQTT broker. Defaults to "mosquitto" (the default broker's username).
+ - `STM_MQTT_PASSWORD` (string): The password used to authenticate to the MQTT broker. Defaults to "sailtrack" (the default broker's password).
  
 To confifure the library, you can add the overridden defines in the `platformio.ini` file, under the `build_flags` section, as in the following example (double quotes must be escaped):
 ```ini
@@ -112,7 +112,7 @@ build_flags =
 Pull requests are welcome. For major changes, please [open an issue](https://github.com/metis-vela-unipd/sailtrack-core/issues/new) first to discuss what you would like to change.
 
 If you are a contributor and you don't have access to SailTrack Core, you can use this procedure to emulate it:
- 1. [Install Docker](https://docs.docker.com/get-docker/)
+ 1. [Install Docker](https://docs.docker.com/get-docker/).
  2. Run the following command:
  ```
  docker run -it -p 1883:1883 eclipse-mosquitto:<version> mosquitto -c /mosquitto-no-auth.conf
@@ -125,8 +125,8 @@ build_flags =
   -D STM_WIFI_GATEWAY_ADDR=\"<your-router-ip>\"
   -D STM_MQTT_HOST_ADDR=\"<your-pc-ip>\"
  ```
- 4. Set the module IP in the `begin(...)` method according to your network
- 5. Check the MQTT traffic using an application like [MQTT Explorer](http://mqtt-explorer.com)
+ 4. Set the module IP in the `begin(...)` method according to your network.
+ 5. Check the MQTT traffic using an application like [MQTT Explorer](http://mqtt-explorer.com).
 
 ## License
 
