@@ -15,12 +15,11 @@ SailTrack Module is the base library required by all the SailTrack's ESP32-based
 
 The SailTrack Module library carries out the minimum tasks required by every module of the SailTrack system, such as:
 
-- The WiFi connection routine
-- The connection to the MQTT broker
-- The publication of status messages
+* The WiFi connection routine.
+* The connection to the MQTT broker.
+* The publication of status messages.
 
 Moreover, the library offers all the required methods to send correctly formatted messages and to subscribe to network topics.
-
 
 ## Installation
 
@@ -130,4 +129,4 @@ build_flags =
 
 ## License
 
-Copyright © 2022, [Métis Vela Unipd](https://github.com/metis-vela-unipd). SailTrack Core is available under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.en.html). See the LICENSE file for more info. 
+Copyright © 2022, [Métis Vela Unipd](https://github.com/metis-vela-unipd). SailTrack Module is available under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.en.html). See the LICENSE file for more info. 
