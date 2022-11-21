@@ -114,7 +114,7 @@ If you are a contributor and you don't have access to SailTrack Core, you can us
  1. [Install Docker](https://docs.docker.com/get-docker/).
  2. Run the following command:
  ```
- docker run -it -p 1883:1883 eclipse-mosquitto:<version> mosquitto -c /mosquitto-no-auth.conf
+ docker run -it -p 1883:1883 eclipse-mosquitto mosquitto -c /mosquitto-no-auth.conf
  ```
  3. Add the following `build_flags` to your `platformio.ini` file, properly setting the options:
  ```ini
