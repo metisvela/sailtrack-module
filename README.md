@@ -5,7 +5,7 @@
 <p align="center">
   <img src="https://img.shields.io/github/license/metis-vela-unipd/sailtrack-module" />
   <img src="https://img.shields.io/github/v/release/metis-vela-unipd/sailtrack-module" />
-  <img src="https://img.shields.io/github/workflow/status/metis-vela-unipd/sailtrack-module/Publish%20Release" />
+  <img src="https://img.shields.io/github/actions/workflow/status/metis-vela-unipd/sailtrack-module/publish.yml" />
 </p>
 
 
