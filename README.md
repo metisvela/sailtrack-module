@@ -15,9 +15,9 @@ SailTrack Module is the base library required by all the SailTrack's ESP32-based
 
 The SailTrack Module library carries out the minimum tasks required by every module of the SailTrack system, such as:
 
-* The WiFi connection routine.
-* The connection to the MQTT broker.
-* The publication of status messages.
+* The WiFi connection routine
+* The connection to the MQTT broker
+* The publication of status messages
 
 Moreover, the library offers all the required methods to send correctly formatted messages and to subscribe to network topics.
 
