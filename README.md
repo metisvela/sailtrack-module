@@ -93,6 +93,7 @@ It is possible to change some settings of the library by overriding one or more 
  - `STM_MQTT_PORT` (integer): The MQTT port number to which the module will try to connect at startup. Defaults to 1883 (the default MQTT port).
  - `STM_MQTT_USERNAME` (string): The username used to authenticate to the MQTT broker. Defaults to "mosquitto" (the default broker's username).
  - `STM_MQTT_PASSWORD` (string): The password used to authenticate to the MQTT broker. Defaults to "sailtrack" (the default broker's password).
+ - `STM_LOG_LEVEL` (ARDUHAL_LOG_LEVEL_*): Log level control (NONE, ERROR, WARN, INFO, DEBUG, TRACE). Defaults to INFO.
  
 To confifure the library, you can add the overridden defines in the `platformio.ini` file, under the `build_flags` section, as in the following example (double quotes must be escaped):
 ```ini

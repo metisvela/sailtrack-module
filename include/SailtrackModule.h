@@ -1,6 +1,12 @@
 #ifndef SAILTRACK_MODULE_H
 #define SAILTRACK_MODULE_H
 
+#ifndef STM_LOG_LEVEL
+#define CORE_DEBUG_LEVEL ARDUHAL_LOG_LEVEL_INFO
+#else
+#define CORE_DEBUG_LEVEL STM_LOG_LEVEL
+#endif
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include <mqtt_client.h>
