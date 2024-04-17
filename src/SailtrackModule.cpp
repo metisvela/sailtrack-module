@@ -21,7 +21,7 @@ void SailtrackModule::begin(const char * name, IPAddress ip, SailtrackModuleCall
     SailtrackModule::callbacks = callbacks;
     sprintf(SailtrackModule::hostname, "sailtrack-%s", name);
 
-    #ifdef STM_NOTIFICATION_LED_PIN
+    #ifdef NOTIFICATION
     beginNotificationLed();
     #endif
     log_printf("\n");
@@ -30,10 +30,14 @@ void SailtrackModule::begin(const char * name, IPAddress ip, SailtrackModuleCall
     beginMqtt();
 }
 
-#ifdef STM_NOTIFICATION_LED_PIN
+#ifdef NOTIFICATION
 void SailtrackModule::beginNotificationLed() {
-    pinMode(STM_NOTIFICATION_LED_PIN, OUTPUT);
-    digitalWrite(STM_NOTIFICATION_LED_PIN, !STM_NOTIFICATION_LED_ON_STATE);
+    pinMode(RED_LED_PIN, OUTPUT);
+    pinMode(BLUE_LED_PIN, OUTPUT);
+    pinMode(GREEN_LED_PIN, OUTPUT);
+    digitalWrite(RED_LED_PIN, 255);
+    digitalWrite(BLUE_LED_PIN, 255);
+    digitalWrite(GREEN_LED_PIN, 255);
     xTaskCreate(notificationLedTask, "notificationLedTask", STM_TASK_SMALL_STACK_SIZE, NULL, STM_TASK_LOW_PRIORITY, NULL);
 }
 #endif
@@ -153,18 +157,55 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
 
 // ------------------------------ Tasks ------------------------------ //
 
-#ifdef STM_NOTIFICATION_LED_PIN
+#ifdef NOTIFICATION
 void SailtrackModule::notificationLedTask(void * pvArguments) {
-    while (!mqttConnected) {
-        digitalWrite(STM_NOTIFICATION_LED_PIN, STM_NOTIFICATION_LED_ON_STATE);
-        delay(500);
-        digitalWrite(STM_NOTIFICATION_LED_PIN, !STM_NOTIFICATION_LED_ON_STATE);
-        delay(500);
+    int status = batteryCheck() + mqttCheck()*10;
+
+    if(status>=10){
+        color(0, 0, 255);
+        delay(20);
+        color(0, 0, 0);
+    }else{
+        switch (status)
+        {
+        case 0
+            color(0, 0, 255);
+            break;
+        case 1
+            color(0, 0, 255);
+            break;
+        case 2
+            color(255, 0, 0);
+            break;
+        case 3
+            color(0, 255, 0);
+            break;
+        }
     }
-    digitalWrite(STM_NOTIFICATION_LED_PIN, STM_NOTIFICATION_LED_ON_STATE);
+    delay(20);
     vTaskDelete(NULL);
 }
+
+int SailtrackModule::mqttCheck(){
+    if(mqttConnected){
+        return 1;
+    }
+    return 0;
+}
+
+// Return: 1 -> using battery and battery >20%; 2-> battery <=20%; 3->battery is charging; 0 -> function not definend
+virtual int SailtrackModule::batteryCheck(){
+    return 0;
+}
+
+void SailtrackModule::color(int red, int green, int blue){
+    digitalWrite(RED_LED_PIN, 255-red);
+    digitalWrite(GREEN_LED_PIN, 255-green);
+    digitalWrite(BLUE_LED_PIN, 255-blue);
+}
+
 #endif
+
 
 void SailtrackModule::statusTask(void * pvArguments) {
     char topic[STM_MQTT_TOPIC_BUFFER_SIZE];

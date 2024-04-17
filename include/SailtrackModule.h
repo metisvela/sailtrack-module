@@ -22,14 +22,19 @@ class SailtrackModule {
     static unsigned int publishedMessagesCount;
     static unsigned int receivedMessagesCount;
 
-    #ifdef STM_NOTIFICATION_LED_PIN
+    #ifdef NOTIFICATION
     static void beginNotificationLed();
     #endif
     static void beginWifi(IPAddress ip);
     static void beginOTA();
     static void beginMqtt();
     static void mqttEventHandler(void * handlerArgs, esp_event_base_t base, int32_t eventId, void * eventData);
+    #ifdef NOTIFICATION
     static void notificationLedTask(void * pvArguments);
+    static int mqttCheck();
+    virtual int batteryCheck();
+    static int color(int red, int green, int blue);
+    #endif
     static void statusTask(void * pvArguments);
     static void logTask(void * pvArguments);
     static void otaTask(void * pvArguments);
