@@ -159,7 +159,7 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
 
 #ifdef NOTIFICATION
 void SailtrackModule::notificationLedTask(void * pvArguments) {
-    int status = batteryCheck() + mqttCheck()*10;
+    int status = this.batteryCheck() + this.mqttCheck()*10;
 
     if(status>=10){
         color(0, 0, 255);
@@ -168,16 +168,16 @@ void SailtrackModule::notificationLedTask(void * pvArguments) {
     }else{
         switch (status)
         {
-        case 0
+        case 0:
             color(0, 0, 255);
             break;
-        case 1
+        case 1:
             color(0, 0, 255);
             break;
-        case 2
+        case 2:
             color(255, 0, 0);
             break;
-        case 3
+        case 3:
             color(0, 255, 0);
             break;
         }
@@ -188,9 +188,9 @@ void SailtrackModule::notificationLedTask(void * pvArguments) {
 
 int SailtrackModule::mqttCheck(){
     if(mqttConnected){
-        return 1;
+        return 0;
     }
-    return 0;
+    return 1;
 }
 
 // Return: 1 -> using battery and battery >20%; 2-> battery <=20%; 3->battery is charging; 0 -> function not definend
