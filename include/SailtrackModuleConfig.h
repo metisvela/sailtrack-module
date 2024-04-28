@@ -13,6 +13,8 @@
 
 // ------------------ Notification LED Configuration ------------------ //
 
+
+//Deletable zone?
 #ifndef STM_NOTIFICATION_LED_PIN
 #ifdef LED_BUILTIN
 #define STM_NOTIFICATION_LED_PIN        LED_BUILTIN
@@ -24,6 +26,21 @@
 #endif
 #ifndef STM_NOTIFICATION_LED_ON_STATE
 #define STM_NOTIFICATION_LED_ON_STATE   HIGH
+#endif
+//End delitable zone?
+
+
+#define BLINKING_TIME 1000
+#ifdef NOTIFICATION
+#ifndef RED_LED_PIN
+#error "RED_LED_PIN not defined" 
+#endif
+#ifndef BLUE_LED_PIN
+#error "BLUE_LED_PIN not defined" 
+#endif
+#ifndef GREEN_LED_PIN
+#error "GREEN_LED_PIN not defined" 
+#endif
 #endif
 
 // ----------------------- Tasks Configuration ----------------------- //

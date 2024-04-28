@@ -26,6 +26,15 @@ class SailtrackModuleCallbacks {
          *      information of the module.
          */
         virtual void onStatusPublish(JsonObject status) {}
+
+        #ifdef NOTIFICATION
+        /**
+         * Local function to manage the led color from the SailtrackModule implementation
+         * 
+         * @return int rapresenting the color to give to the led
+         */
+        virtual uint32_t notificationLed() {}
+        #endif
 };
 
 #endif

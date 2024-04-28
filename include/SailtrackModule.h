@@ -32,8 +32,8 @@ class SailtrackModule {
     #ifdef NOTIFICATION
     static void notificationLedTask(void * pvArguments);
     static int mqttCheck();
-    virtual int batteryCheck();
-    static int color(int red, int green, int blue);
+    static void color(uint8_t red, uint8_t green, uint8_t blue);
+    static void setColor(uint32_t colorCode);
     #endif
     static void statusTask(void * pvArguments);
     static void logTask(void * pvArguments);
