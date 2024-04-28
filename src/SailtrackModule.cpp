@@ -38,6 +38,7 @@ void SailtrackModule::beginNotificationLed() {
     digitalWrite(RED_LED_PIN, 255);
     digitalWrite(BLUE_LED_PIN, 255);
     digitalWrite(GREEN_LED_PIN, 255);
+    log_printf("Led enable and ready");
     xTaskCreate(notificationLedTask, "notificationLedTask", STM_TASK_SMALL_STACK_SIZE, NULL, STM_TASK_LOW_PRIORITY, NULL);
 }
 #endif
@@ -159,31 +160,16 @@ void SailtrackModule::mqttEventHandler(void * handlerArgs, esp_event_base_t base
 
 #ifdef NOTIFICATION
 void SailtrackModule::notificationLedTask(void * pvArguments) {
-    int status = this.batteryCheck() + this.mqttCheck()*10;
-
-    if(status>=10){
-        color(0, 0, 255);
-        delay(20);
-        color(0, 0, 0);
-    }else{
-        switch (status)
-        {
-        case 0:
+    TickType_t lastWakeTime = xTaskGetTickCount();
+    while(true) {
+        if(mqttCheck()){
             color(0, 0, 255);
-            break;
-        case 1:
-            color(0, 0, 255);
-            break;
-        case 2:
-            color(255, 0, 0);
-            break;
-        case 3:
-            color(0, 255, 0);
-            break;
+            vTaskDelay(pdMS_TO_TICKS(BLINKING_TIME));
+            color(0, 0, 0);
         }
+        setColor(callbacks->notificationLed());
+        vTaskDelay(pdMS_TO_TICKS(BLINKING_TIME));
     }
-    delay(20);
-    vTaskDelete(NULL);
 }
 
 int SailtrackModule::mqttCheck(){
@@ -193,12 +179,14 @@ int SailtrackModule::mqttCheck(){
     return 1;
 }
 
-// Return: 1 -> using battery and battery >20%; 2-> battery <=20%; 3->battery is charging; 0 -> function not definend
-virtual int SailtrackModule::batteryCheck(){
-    return 0;
+void SailtrackModule::setColor(uint32_t colorCode){
+    uint8_t red = (uint8_t)(colorCode >> 16);
+    uint8_t green = (uint8_t)(colorCode >> 8);
+    uint8_t blue = (uint8_t)(colorCode);
+    color(red, green, blue);
 }
 
-void SailtrackModule::color(int red, int green, int blue){
+void SailtrackModule::color(uint8_t red, uint8_t green, uint8_t blue){
     digitalWrite(RED_LED_PIN, 255-red);
     digitalWrite(GREEN_LED_PIN, 255-green);
     digitalWrite(BLUE_LED_PIN, 255-blue);
