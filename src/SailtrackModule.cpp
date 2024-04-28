@@ -53,6 +53,7 @@ void SailtrackModule::beginWifi(IPAddress ip) {
         log_i("Impossible to connect to '%s'", STM_WIFI_AP_SSID);
         log_i("Going to deep sleep, goodnight...");
         log_printf("\n");
+        if (callbacks) callbacks->onEnterDeepSleep();
         ESP.deepSleep(STM_WIFI_SLEEP_DURATION_US);
     }
 
