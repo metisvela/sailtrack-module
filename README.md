@@ -49,6 +49,11 @@ class ModuleCallbacks: public SailtrackModuleCallbacks {
         // Add here any extra log information.
     }
 
+    void onEnterDeepSleep() {
+        // Called when the module is about to enter deep sleep.
+        // Add here any extra energy-saving task.
+    }
+
     void onStatusMessage(JsonObject status) {
         // Called when a new status message is being published to the MQTT network.
         // Add here any extra status information (e.g. battery voltage) by adding it to the `status` object.
