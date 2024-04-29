@@ -49,7 +49,7 @@ class ModuleCallbacks: public SailtrackModuleCallbacks {
         // Add here any extra log information.
     }
 
-    void onStatusMessage(JsonObject status) {
+    void onStatusPublish(JsonObject status) {
         // Called when a new status message is being published to the MQTT network.
         // Add here any extra status information (e.g. battery voltage) by adding it to the `status` object.
     }
