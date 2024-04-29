@@ -1,17 +1,17 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/metis-vela-unipd/sailtrack/main/assets/SailTrack%20Logo.svg" width="180">
+  <img src="https://raw.githubusercontent.com/metisvela/sailtrack/main/assets/sailtrack-logo.svg" width="180">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/license/metis-vela-unipd/sailtrack-module" />
-  <img src="https://img.shields.io/github/v/release/metis-vela-unipd/sailtrack-module" />
-  <img src="https://img.shields.io/github/actions/workflow/status/metis-vela-unipd/sailtrack-module/publish.yml" />
+  <img src="https://img.shields.io/github/license/metisvela/sailtrack-module" />
+  <img src="https://img.shields.io/github/v/release/metisvela/sailtrack-module" />
+  <img src="https://img.shields.io/github/actions/workflow/status/metisvela/sailtrack-module/publish.yml" />
 </p>
 
 
 # SailTrack Module
 
-SailTrack Module is the base library required by all the SailTrack's ESP32-based modules. To learn more about the SailTrack project, please visit the [project repository](https://github.com/metis-vela-unipd/sailtrack).
+SailTrack Module is the base library required by all the SailTrack's ESP32-based modules. To learn more about the SailTrack project, please visit the [project repository](https://github.com/metisvela/sailtrack).
 
 The SailTrack Module library carries out the minimum tasks required by every module of the SailTrack system, such as:
 
@@ -84,16 +84,16 @@ void loop() {
 
 It is possible to change some settings of the library by overriding one or more of the following internal defines:
  - `STM_NOTIFICATION_LED_PIN` (integer): The pin to which the notification LED is connected. Defaults to the board's builtin LED pin, if present.
- - `STM_NOTIFICATION_LED_ON_STATE` (`LOW` or `HIGH`): The logic state that corresponds to the ON state of the notification LED. Deafults to `HIGH` (=1).
- - `STM_WIFI_AP_SSID` (string): The name of the WiFi network to which the module will try to connect at startup. Defaults to "SailTrack-CoreNet" (the SSID of the WiFi network created by SailTrack Core).
- - `STM_WIFI_AP_PASSWORD` (string): The password of the WiFi network to which the module will try to connect at startup. Defaults to "sailtracknet" (the deafult password of the WiFi network created by SailTrack Core).
- - `STM_WIFI_GATEWAY_ADDR` (string): The IP address of the gateway (i.e. the router) to which the module will try to connect at startup. Defaults to "192.168.42.1" (the default IP address of SailTrack Core).
- - `STM_WIFI_SUBNET` (string): The subnet mask of the network to which the module will try to connect at startup. Defaults to "255.255.255.0" (the default subnet mask of the network created by SailTrack Core).
- - `STM_MQTT_HOST_ADDR` (string): The IP address of the host running the MQTT broker to which the module will try to connect at startup. Defaults to "192.168.42.1" (the default IP address of SailTrack Core, that is also running the MQTT broker).
- - `STM_MQTT_PORT` (integer): The MQTT port number to which the module will try to connect at startup. Defaults to 1883 (the default MQTT port).
- - `STM_MQTT_USERNAME` (string): The username used to authenticate to the MQTT broker. Defaults to "mosquitto" (the default broker's username).
- - `STM_MQTT_PASSWORD` (string): The password used to authenticate to the MQTT broker. Defaults to "sailtrack" (the default broker's password).
- - `STM_LOG_LEVEL` (ARDUHAL_LOG_LEVEL_*): Log level control (NONE, ERROR, WARN, INFO, DEBUG, TRACE). Defaults to INFO.
+ - `STM_NOTIFICATION_LED_ON_STATE` (`LOW` or `HIGH`): The logic state that corresponds to the ON state of the notification LED. Deafults to `HIGH` (=`1`).
+ - `STM_WIFI_AP_SSID` (string): The name of the WiFi network to which the module will try to connect at startup. Defaults to `SailTrack-CoreNet` (the SSID of the WiFi network created by SailTrack Core).
+ - `STM_WIFI_AP_PASSWORD` (string): The password of the WiFi network to which the module will try to connect at startup. Defaults to `sailtracknet` (the deafult password of the WiFi network created by SailTrack Core).
+ - `STM_WIFI_GATEWAY_ADDR` (string): The IP address of the gateway (i.e. the router) to which the module will try to connect at startup. Defaults to `192.168.42.1` (the default IP address of SailTrack Core).
+ - `STM_WIFI_SUBNET` (string): The subnet mask of the network to which the module will try to connect at startup. Defaults to `255.255.255.0` (the default subnet mask of the network created by SailTrack Core).
+ - `STM_MQTT_HOST_ADDR` (string): The IP address of the host running the MQTT broker to which the module will try to connect at startup. Defaults to `192.168.42.1` (the default IP address of SailTrack Core, that is also running the MQTT broker).
+ - `STM_MQTT_PORT` (integer): The MQTT port number to which the module will try to connect at startup. Defaults to `1883` (the default MQTT port).
+ - `STM_MQTT_USERNAME` (string): The username used to authenticate to the MQTT broker. Defaults to `mosquitto` (the default broker's username).
+ - `STM_MQTT_PASSWORD` (string): The password used to authenticate to the MQTT broker. Defaults to `sailtrack` (the default broker's password).
+ - `STM_LOG_LEVEL` (`ARDUHAL_LOG_LEVEL_*` enum): Log level control. Possible values: `NONE`, `ERROR`, `WARN`, `INFO`, `DEBUG`, `TRACE`). Defaults to `INFO`.
  
 To confifure the library, you can add the overridden defines in the `platformio.ini` file, under the `build_flags` section, as in the following example (double quotes must be escaped):
 ```ini
@@ -109,7 +109,7 @@ build_flags =
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please [open an issue](https://github.com/metis-vela-unipd/sailtrack-core/issues/new) first to discuss what you would like to change.
+Pull requests are welcome. For major changes, please [open an issue](https://github.com/metisvela/sailtrack-module/issues/new) first to discuss what you would like to change.
 
 If you are a contributor and you don't have access to SailTrack Core, you can use this procedure to emulate it:
  1. [Install Docker](https://docs.docker.com/get-docker/).
@@ -130,4 +130,4 @@ build_flags =
 
 ## License
 
-Copyright © 2023, [Métis Vela Unipd](https://github.com/metis-vela-unipd). SailTrack Module is available under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.en.html). See the LICENSE file for more info. 
+Copyright © 2023, [Métis Vela Unipd](https://github.com/metisvela). SailTrack Module is available under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.en.html). See the LICENSE file for more info. 
