@@ -26,6 +26,11 @@ class SailtrackModuleCallbacks {
          *      information of the module.
          */
         virtual void onStatusPublish(JsonObject status) {}
+
+        /**
+         * Called when the module is about to enter deep sleep.
+         */
+        virtual void onEnterDeepSleep() {}
 };
 
 #endif
