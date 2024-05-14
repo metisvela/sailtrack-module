@@ -166,8 +166,9 @@ void SailtrackModule::notificationLedTask(void * pvArguments) {
             color(0, 0, 255);
             vTaskDelay(pdMS_TO_TICKS(BLINKING_TIME));
             color(0, 0, 0);
+        }else{
+            setColor(callbacks->notificationLed());
         }
-        setColor(callbacks->notificationLed());
         vTaskDelay(pdMS_TO_TICKS(BLINKING_TIME));
     }
 }

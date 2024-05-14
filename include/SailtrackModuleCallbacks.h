@@ -33,7 +33,7 @@ class SailtrackModuleCallbacks {
          * 
          * @return int rapresenting the color to give to the led
          */
-        virtual uint32_t notificationLed() {}
+        virtual uint32_t notificationLed() { return 0x00000000;}
         #endif
 };
 
